@@ -24,6 +24,8 @@ import grpc
 
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 # Configure logging to file and console
 logging.basicConfig(
@@ -34,10 +36,23 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+debug_flag = os.getenv("DEBUG_FLAG", "False")
+
+FRAUD_DETECTION_PORT = os.getenv("FRAUD_DETECTION_PORT")
+if FRAUD_DETECTION_PORT is None:
+    raise RuntimeError("FRAUD_DETECTION_PORT environment variable is required!")
+
+TRANSACTION_PORT = os.getenv("TRANSACTION_PORT")
+if TRANSACTION_PORT is None:
+    raise RuntimeError("TRANSACTION_PORT environment variable is required!")
+
+SUGGESTIONS_PORT = os.getenv("SUGGESTIONS_PORT")
+if SUGGESTIONS_PORT is None:
+    raise RuntimeError("SUGGESTIONS_PORT environment variable is required!")
 
 def detect_fraud(card_nr, order_ammount):
     # Establish a connection with the fraud-detection gRPC service.
-    with grpc.insecure_channel('fraud_detection:50051') as channel:
+    with grpc.insecure_channel(f"fraud_detection:{FRAUD_DETECTION_PORT}") as channel:
         # Create a stub object.
         stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
         # Call the service through the stub object.
@@ -47,7 +62,7 @@ def detect_fraud(card_nr, order_ammount):
     return response.is_fraud
 
 def verify_transaction(card_nr, order_id, money):
-    with grpc.insecure_channel('transaction_verification:50052') as channel:
+    with grpc.insecure_channel(f"transaction_verification:{TRANSACTION_PORT}") as channel:
         # Create a stub object.
         stub = transaction_verification_grpc.transactionServiceStub(channel)
         # Call the service through the stub object.
@@ -57,7 +72,7 @@ def verify_transaction(card_nr, order_id, money):
     return response.verified
 
 def get_suggested_books(ordered_books):
-    with grpc.insecure_channel("suggestions:50053") as channel:
+    with grpc.insecure_channel(f"suggestions:{SUGGESTIONS_PORT}") as channel:
         stub = suggestions_grpc.SuggestionsServiceStub(channel)
 
         response = stub.suggest(suggestions.SuggestRequest(ordered_books=ordered_books))
@@ -90,15 +105,59 @@ def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
+    start_time = time.time()
     # Get request object data to json
     request_data = json.loads(request.data)
     # Print request object data
 
     quantity = sum([item["quantity"] for item in request_data["items"]])
 
-    is_fraud = detect_fraud(request_data["creditCard"]["number"], quantity)
-    suggested_books = get_suggested_books([i["name"] for i in request_data["items"]])
-    logger.info(f"Got suggested books.")
+    # Generate order_id
+    order_id = random.randint(0, 2**63 - 1)
+
+    is_fraud = False
+    suggested_books = []
+    verified = False
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        # Submit all three tasks
+        fraud_future = executor.submit(
+            detect_fraud,
+            request_data["creditCard"]["number"],
+            quantity
+        )
+        suggestions_future = executor.submit(
+            get_suggested_books,
+            [i["name"] for i in request_data["items"]]
+        )
+        transaction_future = executor.submit(
+            verify_transaction,
+            request_data["creditCard"]["number"],
+            order_id,
+            quantity
+        )
+
+        # Wait for all futures to complete and get results
+        try:
+            is_fraud = fraud_future.result()
+            logger.info("Fraud detection completed.")
+        except Exception as e:
+            logger.error(f"Fraud detection failed: {e}")
+            is_fraud = True  # Assume fraud if service fails
+
+        try:
+            suggested_books = suggestions_future.result()
+            logger.info("Suggested books retrieved.")
+        except Exception as e:
+            logger.error(f"Failed to get suggested books: {e}")
+            suggested_books = []
+
+        try:
+            verified = transaction_future.result()
+            logger.info("Transaction verification completed.")
+        except Exception as e:
+            logger.error(f"Transaction verification failed: {e}")
+            verified = False
 
     # Convert the gRPC response to a dictionary
     suggested_books_dicts = []
@@ -109,12 +168,11 @@ def checkout():
             'author': book.author
         })
 
-    # Generate order_id
-    order_id = random.randint(0, 2**63 - 1)
 
-    verified = verify_transaction(request_data["creditCard"]["number"], order_id, quantity)
     if not verified:
         is_fraud = True
+        logger.warning("Transaction not verified, marking as fraud.")
+
 
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
@@ -123,6 +181,8 @@ def checkout():
         'suggestedBooks': suggested_books_dicts if not is_fraud else [],
     }
 
+    logger.info(f"Order {order_id} processed with status: {order_status_response['status']}")
+    logger.info(f"Checkout completed in {time.time() - start_time:.2f} seconds")
     return jsonify(order_status_response)
 
 
@@ -130,4 +190,4 @@ if __name__ == '__main__':
     # Run the app in debug mode to enable hot reloading.
     # This is useful for development.
     # The default port is 5000.
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=debug_flag)

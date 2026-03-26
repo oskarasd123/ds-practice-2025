@@ -24,6 +24,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+port = os.getenv("TRANSACTION_PORT")
+if port is None:
+    raise RuntimeError("TRANSACTION_PORT environment variable is required!")
 
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.TransactionVerificationService
@@ -44,12 +47,14 @@ def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())
     transaction_verification_grpc.add_transactionServiceServicer_to_server(TransactionVerificationService(), server)
+    
     # Listen on port 50052
-    port = "50052"
     server.add_insecure_port("[::]:" + port)
+
     # Start the server
     server.start()
-    logger.info("Server started. Listening on port 50052.")
+    logger.info(f"Server started. Listening on port {port}.")
+
     # Keep thread alive
     server.wait_for_termination()
 

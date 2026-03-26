@@ -7,11 +7,12 @@ logger = logging.getLogger(__name__)
 
 # API_KEY=os.environ.get("api_key")
 
-def get_book_suggestions(book_ordered_by_customer, number_of_books = 5):
+def get_book_suggestions(book_ordered_by_customer, api_key, number_of_books = 5):
 
     #TODO: get from ENV
     payload = {
-        'api-key': 'c59ecdfb8fa34bab97dac34162e9a098',
+        # 'api-key': 'c59ecdfb8fa34bab97dac34162e9a098',
+        'api-key': api_key,
         'query': book_ordered_by_customer,
         'number': 10,
         'group-results': 'true'
@@ -20,7 +21,7 @@ def get_book_suggestions(book_ordered_by_customer, number_of_books = 5):
     logger.info("Calling BigBookAPI for book: %s", book_ordered_by_customer)
 
     try:
-        r = requests.get('https://api.bigbookapi.com/search-books?', params=payload, timeout=4)
+        r = requests.get('https://api.bigbookapi.com/search-books?', params=payload, timeout=8)
         logger.info(f"Successfully retrieved books")
     except requests.RequestException as e:
         logger.error(f"API call failed  for book: {book_ordered_by_customer}. Error: {e}")
@@ -46,7 +47,8 @@ def get_book_suggestions(book_ordered_by_customer, number_of_books = 5):
 
     # Get similar book
     payload = {
-        'api-key': 'c59ecdfb8fa34bab97dac34162e9a098',
+        # 'api-key': 'c59ecdfb8fa34bab97dac34162e9a098',
+        'api-key': api_key,
         "id": book_id,
         "number": number_of_books,
     }
