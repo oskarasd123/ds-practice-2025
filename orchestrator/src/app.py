@@ -1,29 +1,25 @@
 import sys
 import os
 import random
+from threading import Thread
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
-transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
-suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
-orchestrator_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/orchestrator'))
-sys.path.insert(0, fraud_detection_grpc_path)
-import fraud_detection_pb2 as fraud_detection
-import fraud_detection_pb2_grpc as fraud_detection_grpc
-sys.path.insert(0, transaction_verification_grpc_path)
-import transaction_verification_pb2 as transaction_verification
-import transaction_verification_pb2_grpc as transaction_verification_grpc
+root_path = os.path.abspath(os.path.join(FILE, '../../..'))
+sys.path.insert(0, root_path)
+import utils.pb.fraud_detection.fraud_detection_pb2 as fraud_detection
+import utils.pb.fraud_detection.fraud_detection_pb2_grpc as fraud_detection_grpc
 
-sys.path.insert(0, suggestions_grpc_path)
-import suggestions_pb2 as suggestions
-import suggestions_pb2_grpc as suggestions_grpc
+import utils.pb.transaction_verification.transaction_verification_pb2 as transaction_verification
+import utils.pb.transaction_verification.transaction_verification_pb2_grpc as transaction_verification_grpc
 
-sys.path.insert(0, orchestrator_grpc_path)
-import orchestrator_pb2 as orchestrator
-import orchestrator_pb2_grpc as orchestrator_grpc
+import utils.pb.suggestions.suggestions_pb2 as suggestions
+import utils.pb.suggestions.suggestions_pb2_grpc as suggestions_grpc
+
+import utils.pb.orchestrator.orchestrator_pb2 as orchestrator
+import utils.pb.orchestrator.orchestrator_pb2_grpc as orchestrator_grpc
 
 import grpc
 
@@ -55,11 +51,22 @@ suggestion_stub = suggestions_grpc.SuggestionsServiceStub(suggestion_channel)
 
 def orchestrator_checkout_flow(order_id, order_data):
     fraud_stub.InitOrder(order_id, order_data)
+    verification_stub.InitOrder(order_id, order_data)
+    suggestion_stub.InitOrder(order_id, order_data)
+    
+    fails = []
 
-    def fraud_event():
-        resp = fraud_stub.IsFraud(order_id)
-        if resp["fail"]:
-            raise Exception(f"fraud failed with {order_data}")
+    def fraud_start():
+        fraud_stub.bookCheck(order_id)
+    
+    def verification_start():
+        verification_stub.checkCard(order_id)
+    
+    fraud_thread = Thread(target=fraud_start)
+    verification_thread = Thread(target=verification_start)
+    fraud_thread.start()
+    verification_thread.start()
+            
 
 
 # Import Flask.
@@ -103,14 +110,20 @@ def checkout():
 
     # Convert the gRPC response to a dictionary
     suggested_books_dicts = []
-    for book in suggested_books:
-        suggested_books_dicts.append({
-            'bookId': book.bookId,
-            'title': book.title,
-            'author': book.author
-        })
+    #for book in suggested_books:
+    #    suggested_books_dicts.append({
+    #        'bookId': book.bookId,
+    #        'title': book.title,
+    #        'author': book.author
+    #    })
 
-    # Generate order_id
+    suggested_books_dicts = [{
+        "bookId" : "8942786189",
+        "titile" : "1999",
+        "author" : "Timmy"
+    }]
+
+    is_fraud = False
 
 
     # Dummy response following the provided YAML specification for the bookstore
