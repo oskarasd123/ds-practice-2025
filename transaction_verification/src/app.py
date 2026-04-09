@@ -5,19 +5,26 @@ import os
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-root_path = os.path.abspath(os.path.join(FILE, '../../..'))
-sys.path.insert(0, root_path)
-import utils.pb.fraud_detection.fraud_detection_pb2 as fraud_detection
-import utils.pb.fraud_detection.fraud_detection_pb2_grpc as fraud_detection_grpc
 
-import utils.pb.transaction_verification.transaction_verification_pb2 as transaction_verification
-import utils.pb.transaction_verification.transaction_verification_pb2_grpc as transaction_verification_grpc
+transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
+sys.path.insert(0, transaction_verification_grpc_path)
+import transaction_verification_pb2 as transaction_verification
+import transaction_verification_pb2_grpc as transaction_verification_grpc
 
-import utils.pb.suggestions.suggestions_pb2 as suggestions
-import utils.pb.suggestions.suggestions_pb2_grpc as suggestions_grpc
+transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
+sys.path.insert(0, transaction_verification_grpc_path)
+import transaction_verification_pb2 as transaction_verification
+import transaction_verification_pb2_grpc as transaction_verification_grpc
 
-import utils.pb.orchestrator.orchestrator_pb2 as orchestrator
-import utils.pb.orchestrator.orchestrator_pb2_grpc as orchestrator_grpc
+suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
+sys.path.insert(0, suggestions_grpc_path)
+import suggestions_pb2 as suggestions
+import suggestions_pb2_grpc as suggestions_grpc
+
+orchestrator_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/orchestrator'))
+sys.path.insert(0, orchestrator_grpc_path)
+import orchestrator_pb2 as orchestrator
+import orchestrator_pb2_grpc as orchestrator_grpc
 
 import grpc
 from concurrent import futures
