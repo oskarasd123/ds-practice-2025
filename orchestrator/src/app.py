@@ -31,6 +31,8 @@ import grpc
 
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 # Configure logging to file and console
 logging.basicConfig(
@@ -41,11 +43,24 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+debug_flag = os.getenv("DEBUG_FLAG", "False")
+
+FRAUD_DETECTION_PORT = os.getenv("FRAUD_DETECTION_PORT")
+if FRAUD_DETECTION_PORT is None:
+    raise RuntimeError("FRAUD_DETECTION_PORT environment variable is required!")
+
+TRANSACTION_PORT = os.getenv("TRANSACTION_PORT")
+if TRANSACTION_PORT is None:
+    raise RuntimeError("TRANSACTION_PORT environment variable is required!")
+
+SUGGESTIONS_PORT = os.getenv("SUGGESTIONS_PORT")
+if SUGGESTIONS_PORT is None:
+    raise RuntimeError("SUGGESTIONS_PORT environment variable is required!")
 
 
-fraud_channel = grpc.insecure_channel('fraud_detection:50051')
-verification_channel = grpc.insecure_channel('transaction_verification:50052')
-suggestion_channel = grpc.insecure_channel("suggestions:50053")
+fraud_channel = grpc.insecure_channel(f'fraud_detection:{FRAUD_DETECTION_PORT}')
+verification_channel = grpc.insecure_channel(f'transaction_verification:{TRANSACTION_PORT}')
+suggestion_channel = grpc.insecure_channel(f"suggestions:{SUGGESTIONS_PORT}")
 
 fraud_stub = fraud_detection_grpc.FraudDetectionServiceStub(fraud_channel)
 verification_stub = transaction_verification_grpc.transactionServiceStub(verification_channel)
@@ -59,20 +74,20 @@ def orchestrator_checkout_flow(order_id, order_data):
     fraud_stub.InitOrder(order_id, order_data)
     verification_stub.InitOrder(order_id, order_data)
     suggestion_stub.InitOrder(order_id, order_data)
-    
+
     fails = []
 
     def fraud_start():
         fraud_stub.bookCheck(order_id)
-    
+
     def verification_start():
         verification_stub.checkCard(order_id)
-    
+
     fraud_thread = Thread(target=fraud_start)
     verification_thread = Thread(target=verification_start)
     fraud_thread.start()
     verification_thread.start()
-            
+
 
 
 # Import Flask.
@@ -139,6 +154,8 @@ def checkout():
         'suggestedBooks': suggested_books_dicts if not is_fraud else [],
     }
 
+    logger.info(f"Order {order_id} processed with status: {order_status_response['status']}")
+    logger.info(f"Checkout completed in {time.time() - start_time:.2f} seconds")
     return jsonify(order_status_response)
 
 suggestion_channel.close()
@@ -149,4 +166,4 @@ if __name__ == '__main__':
     # Run the app in debug mode to enable hot reloading.
     # This is useful for development.
     # The default port is 5000.
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=debug_flag)

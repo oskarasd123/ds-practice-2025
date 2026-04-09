@@ -40,6 +40,14 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+port = os.getenv("SUGGESTIONS_PORT")
+if port is None:
+    raise RuntimeError("SUGGESTIONS_PORT environment variable is required!")
+
+api_key = os.getenv("API_KEY")
+if api_key is None:
+    raise RuntimeError("API_KEY environment variable is required!")
+
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.HelloServiceServicer
 class SuggestionsService(suggestions_grpc.SuggestionsServiceServicer):
@@ -52,7 +60,7 @@ class SuggestionsService(suggestions_grpc.SuggestionsServiceServicer):
         books_data = []
         for book in request.ordered_books:
             logger.info("Fetching suggestions for: %s", book)
-            books_data = books_data + book_script.get_book_suggestions(book)
+            books_data = books_data + book_script.get_book_suggestions(book, api_key=api_key)
 
         # in case API service doesn't work
         # books_data = [
@@ -77,7 +85,6 @@ def serve():
     suggestions_grpc.add_SuggestionsServiceServicer_to_server(SuggestionsService(), server)
 
     # Listen on port 50053
-    port = "50053"
     server.add_insecure_port("[::]:" + port)
 
     # Start the server
