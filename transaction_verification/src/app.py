@@ -1,5 +1,6 @@
 import sys
 import os
+from google.protobuf import empty_pb2
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -7,6 +8,10 @@ import os
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 root_path = os.path.abspath(os.path.join(FILE, '../../..'))
 sys.path.insert(0, root_path)
+sys.path.append(os.path.join(root_path, 'utils/pb/fraud_detection'))
+sys.path.append(os.path.join(root_path, 'utils/pb/transaction_verification'))
+sys.path.append(os.path.join(root_path, 'utils/pb/suggestions'))
+sys.path.append(os.path.join(root_path, 'utils/pb/orchestrator'))
 import utils.pb.fraud_detection.fraud_detection_pb2 as fraud_detection
 import utils.pb.fraud_detection.fraud_detection_pb2_grpc as fraud_detection_grpc
 
@@ -37,17 +42,14 @@ logger = logging.getLogger(__name__)
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.TransactionVerificationService
 class TransactionVerificationService(transaction_verification_grpc.transactionServiceServicer):
-    def verifyTransaction(self, request, context):
-        print(request)
-        response = transaction_verification.PayResponse()
-
-        response.order_id = request.order_id
-        verified = True
-        if request.money > int(request.card_nr)*0.001: # card doesn't have enough money
-            verified = False
-        response.verified = verified
-        logger.info(f"request: {request} response: {response}")
-        return response
+    def initOrder(self, request, context):
+        return empty_pb2.Empty()
+    def checkCard(self, request, context):
+        return empty_pb2.Empty()
+    def checkMoney(self, request, context):
+        return empty_pb2.Empty()
+    def startPayment(self, request, context):
+        return empty_pb2.Empty()
 
 def serve():
     # Create a gRPC server
