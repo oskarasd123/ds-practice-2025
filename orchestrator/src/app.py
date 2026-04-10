@@ -115,108 +115,119 @@ def merge(a: list, b: list) -> list:
 class OrchestratorServicer(orchestrator_grpc.OrchestratorServiceServicer):
 
     def eventDone(self, request, context):
-        logger.info(f"[{request.order_id}] eventDone event={request.event_name} clock={list(request.clock.values)}")
-        print(f"[{request.order_id}] eventDone event={request.event_name} clock={list(request.clock.values)}")
         order_id   = request.order_id
         event_name = request.event_name
         clock      = list(request.clock.values) or [0] * TOTAL_SVCS
         flow       = flows.get(order_id)
+
+        logger.info(f"[{order_id}] eventDone event={event_name} clock={clock} failed={request.failed}")
+        print(f"[{order_id}] eventDone event={event_name} clock={clock} failed={request.failed}", flush=True)
+
         if not flow:
             return empty_pb2.Empty()
 
-        logger.info(f"[{request.order_id}] eventDone called with event={request.event_name}, flow exists: {flow is not None}")
-        print(f"[{request.order_id}] eventDone called with event={request.event_name}, flow exists: {flow is not None}")
+        # Propagate failure immediately
+        if request.failed:
+            with flow.lock:
+                if not flow.done.is_set():
+                    flow.failed      = True
+                    flow.error_msg   = request.error_msg
+                    flow.final_clock = clock
+                    flow.done.set()
+            return empty_pb2.Empty()
 
-
-        logger.info(f"[{order_id}] eventDone event={event_name} clock={clock} failed={request.failed}")
-
-        try:
-            # Propagate failure immediately
-            if request.failed:
-                with flow.lock:
-                    if not flow.done.is_set():
-                        flow.failed    = True
-                        flow.error_msg = request.error_msg
-                        flow.final_clock = clock
-                        flow.done.set()
-                return empty_pb2.Empty()
-
-            # Dependency graph — each event triggers the next
-            if event_name == "a":
-                # (a) done -> trigger (c)
+        if event_name == "a":
+            def trigger_c():
                 try:
-                    print("should trigger c")
-                    verification_stub.checkCard(transaction_verification.EventRequest(
-                        order_id=order_id,
-                        clock=transaction_verification.VectorClock(values=clock)))
-                    print(f"[{order_id}] checkCard for event c succeeded")
-                except grpc.RpcError as e:
-                    logger.error(f"[{order_id}] Failed to trigger event c: {e}")
-                    print(f"[{order_id}] Failed to trigger event c: {e}")
+                    print(f"[{order_id}] triggering (c) checkCard", flush=True)
+                    verification_stub.checkCard(
+                        transaction_verification.EventRequest(
+                            order_id=order_id,
+                            clock=transaction_verification.VectorClock(values=clock)))
+                except Exception as e:
+                    print(f"[{order_id}] trigger_c FAILED: {e}", flush=True)
+                    logger.error(f"[{order_id}] trigger_c FAILED: {e}")
                     with flow.lock:
                         if not flow.done.is_set():
-                            flow.failed = True
-                            flow.error_msg = f"Failed to trigger event c: {e}"
+                            flow.failed      = True
+                            flow.error_msg   = str(e)
                             flow.final_clock = clock
                             flow.done.set()
+            Thread(target=trigger_c, daemon=True).start()
 
-            elif event_name == "b":
-                # (b) done -> trigger (d)
+        elif event_name == "b":
+            def trigger_d():
                 try:
-                    print("should trigger D")
-                    fraud_stub.userCheck(fraud_detection.EventRequest(
-                        order_id=order_id,
-                        clock=fraud_detection.VectorClock(values=clock)))
-                except grpc.RpcError as e:
-                    logger.error(f"[{order_id}] Failed to trigger event d: {e}")
-                    print(f"[{order_id}] Failed to trigger event d: {e}")
+                    print(f"[{order_id}] triggering (d) userCheck", flush=True)
+                    fraud_stub.userCheck(
+                        fraud_detection.EventRequest(
+                            order_id=order_id,
+                            clock=fraud_detection.VectorClock(values=clock)))
+                except Exception as e:
+                    print(f"[{order_id}] trigger_d FAILED: {e}", flush=True)
+                    logger.error(f"[{order_id}] trigger_d FAILED: {e}")
                     with flow.lock:
                         if not flow.done.is_set():
-                            flow.failed = True
-                            flow.error_msg = f"Failed to trigger event d: {e}"
+                            flow.failed      = True
+                            flow.error_msg   = str(e)
                             flow.final_clock = clock
                             flow.done.set()
+            Thread(target=trigger_d, daemon=True).start()
 
-            elif event_name in ("c", "d"):
-                # Gate: (e) only fires when both (c) and (d) done
-                with flow.lock:
-                    if event_name == "c":
-                        flow.c_done  = True
-                        flow.c_clock = clock
-                    else:
-                        flow.d_done  = True
-                        flow.d_clock = clock
+        elif event_name in ("c", "d"):
+            with flow.lock:
+                if event_name == "c":
+                    flow.c_done  = True
+                    flow.c_clock = clock
+                else:
+                    flow.d_done  = True
+                    flow.d_clock = clock
 
-                    if flow.c_done and flow.d_done:
-                        merged = merge(flow.c_clock, flow.d_clock)
-                        # Fire (e) outside the lock
-                        fire_e = True
-                    else:
-                        fire_e = False
+                fire_e  = flow.c_done and flow.d_done
+                merged  = merge(flow.c_clock, flow.d_clock) if fire_e else None
 
-                if fire_e:
-                    print("should RUN E")
-                    fraud_stub.cardCheck(fraud_detection.EventRequest(
-                        order_id=order_id,
-                        clock=fraud_detection.VectorClock(values=merged)))
+            if fire_e:
+                def trigger_e():
+                    try:
+                        print(f"[{order_id}] triggering (e) cardCheck clock={merged}", flush=True)
+                        fraud_stub.cardCheck(
+                            fraud_detection.EventRequest(
+                                order_id=order_id,
+                                clock=fraud_detection.VectorClock(values=merged)))
+                    except Exception as e:
+                        print(f"[{order_id}] trigger_e FAILED: {e}", flush=True)
+                        logger.error(f"[{order_id}] trigger_e FAILED: {e}")
+                        with flow.lock:
+                            if not flow.done.is_set():
+                                flow.failed      = True
+                                flow.error_msg   = str(e)
+                                flow.final_clock = merged
+                                flow.done.set()
+                Thread(target=trigger_e, daemon=True).start()
+            else:
+                print(f"[{order_id}] event {event_name} done, waiting for the other of (c)/(d)", flush=True)
 
-            elif event_name == "e":
-                # # TEMP: skip suggestions service, fake the response
-                # flow = flows.get(order_id)
-                # if flow and not flow.done.is_set():
-                #     flow.suggestions = ["Fake Book 1", "Fake Book 2"]
-                #     flow.final_clock = clock
-                #     flow.done.set()
+        elif event_name == "e":
+            def trigger_f():
+                try:
+                    print(f"[{order_id}] triggering (f) getSuggestions", flush=True)
+                    suggestion_stub.getSuggestions(
+                        suggestions.getSuggestionsRequest(
+                            order_id=order_id,
+                            clock=suggestions.VectorClock(values=clock)))
+                except Exception as e:
+                    print(f"[{order_id}] trigger_f FAILED: {e}", flush=True)
+                    logger.error(f"[{order_id}] trigger_f FAILED: {e}")
+                    with flow.lock:
+                        if not flow.done.is_set():
+                            flow.failed      = True
+                            flow.error_msg   = str(e)
+                            flow.final_clock = clock
+                            flow.done.set()
+            Thread(target=trigger_f, daemon=True).start()
 
-                # flow.is_fraud = request.is_fraud
-                # (e) done → trigger (f)
-                suggestion_stub.getSuggestions(suggestions.getSuggestionsRequest(
-                    order_id=order_id,
-                    clock=suggestions.VectorClock(values=clock)))
-
-        except Exception as e:
-            logger.error(f"[{request.order_id}] eventDone CRASHED on event={request.event_name}: {e}")
-            print(f"[{request.order_id}] eventDone CRASHED on event={request.event_name}: {e}")
+        else:
+            logger.warning(f"[{order_id}] unknown event_name={event_name}")
 
         return empty_pb2.Empty()
 
@@ -311,7 +322,7 @@ def orchestrator_checkout_flow(order_id: int, request_data: dict):
 
 
 def serve_grpc():
-    server = grpc.server(ThreadPoolExecutor())
+    server = grpc.server(ThreadPoolExecutor(max_workers=10))
     orchestrator_grpc.add_OrchestratorServiceServicer_to_server(OrchestratorServicer(), server)
     server.add_insecure_port(f'[::]:{ORCH_PORT}')
     server.start()
@@ -390,9 +401,11 @@ def checkout():
     return jsonify(order_status_response)
 
 if __name__ == '__main__':
+
     # Run the app in debug mode to enable hot reloading.
     # This is useful for development.
     # The default port is 5000.
     grpc_thread = Thread(target=serve_grpc, daemon=True)
     grpc_thread.start()
-    app.run(host='0.0.0.0', debug=debug_flag)
+    # not sure what is this reloader, but looks like we need it for threads / vector clocks to work properly
+    app.run(host='0.0.0.0', debug=debug_flag, use_reloader=False)

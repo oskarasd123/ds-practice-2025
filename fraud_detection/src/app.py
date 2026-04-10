@@ -6,6 +6,7 @@ from google.protobuf import empty_pb2
 
 import grpc
 import logging
+import time
 
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 
@@ -14,26 +15,20 @@ sys.path.insert(0, fraud_detection_grpc_path)
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
 
-# transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
-# sys.path.insert(0, transaction_verification_grpc_path)
-# import transaction_verification_pb2 as transaction_verification
-# import transaction_verification_pb2_grpc as transaction_verification_grpc
-
-# suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
-# sys.path.insert(0, suggestions_grpc_path)
-# import suggestions_pb2 as suggestions
-# import suggestions_pb2_grpc as suggestions_grpc
-
 orchestrator_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/orchestrator'))
 sys.path.insert(0, orchestrator_grpc_path)
 import orchestrator_pb2 as orchestrator
 import orchestrator_pb2_grpc as orchestrator_grpc
 
 logging.basicConfig(
-    filename="/logs/fraud_detection_logs.txt",
-    filemode="a",
+    # filename="/logs/fraud_detection_logs.txt",
+    # filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
+    handlers=[
+        logging.FileHandler("/logs/fraud_detection_logs.txt"),
+        logging.StreamHandler()  # ← also print to docker logs
+    ]
 )
 
 logger = logging.getLogger(__name__)
@@ -92,28 +87,34 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionService):
     # ── Event (d): user fraud check ──
     def userCheck(self, request, context):
         print("userCheck - D\n")
+        # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
-        incoming = proto_to_list(request.clock)
-        merge_and_increment(entry["vc"], incoming)
-        logger.info(f"[{request.order_id}] (d) userCheck vc={entry['vc']}")
+            incoming = proto_to_list(request.clock)
+            merge_and_increment(entry["vc"], incoming)
+            clock_snap = list(entry["vc"])
+
+        logger.info(f"[{request.order_id}] (d) userCheck vc={clock_snap}")
 
         print("EVENT D failed: false",)
         # Dummy: always passes
-        callback(request.order_id, "d", list(entry["vc"]))
+        callback(request.order_id, "d", clock_snap)
         return empty_pb2.Empty()
 
     # ── Event (e): card fraud check ──
     def cardCheck(self, request, context):
         print("cardCheck - E\n")
+        # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
-        incoming = proto_to_list(request.clock)
-        merge_and_increment(entry["vc"], incoming)
-        logger.info(f"[{request.order_id}] (e) cardCheck vc={entry['vc']}")
+            incoming = proto_to_list(request.clock)
+            merge_and_increment(entry["vc"], incoming)
+            clock_snap = list(entry["vc"])
+            card_nr = entry["data"].card_nr
 
-        card     = entry["data"].card_nr
-        is_fraud = not (card.isdigit() and len(card) == 16)
+        logger.info(f"[{request.order_id}] (e) cardCheck vc={clock_snap}")
+
+        is_fraud = not (isinstance(card_nr, int) and not str(card_nr).startswith('999'))
         print("EVENT e failed ", is_fraud)
         callback(request.order_id, "e", list(entry["vc"]), is_fraud=is_fraud)
 
@@ -139,7 +140,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionService):
 
 def serve():
     # Create a gRPC server
-    server = grpc.server(futures.ThreadPoolExecutor())
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     # Add HelloService
     fraud_detection_grpc.add_FraudDetectionServiceServicer_to_server(FraudDetectionService(), server)

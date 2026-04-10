@@ -1,10 +1,12 @@
 import sys
 import os
 import threading
+from stat import filemode
 
 import grpc
 from concurrent import futures
 import logging
+import time
 
 from google.protobuf import empty_pb2
 
@@ -28,6 +30,10 @@ logging.basicConfig(
     filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
+    # handlers=[
+    #     logging.FileHandler("/logs/transaction_logs.txt"),
+    #     logging.StreamHandler()  # ← also print to docker logs
+    # ]
 )
 
 logger = logging.getLogger(__name__)
@@ -93,47 +99,56 @@ class TransactionVerificationService(transaction_verification_grpc.transactionSe
     # ── Event (a): items not empty ──
     def checkItems(self, request, context):
         print("CHECK ITEMS - A \n")
+        # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
-        incoming = proto_to_list(request.clock)
-        merge_and_increment(entry["vc"], incoming)
-        logger.info(f"[{request.order_id}] (a) checkItems vc={entry['vc']}")
+            incoming = proto_to_list(request.clock)
+            merge_and_increment(entry["vc"], incoming)
+            clock_snap = list(entry["vc"])
+            items = list(entry["data"].items)
+        logger.info(f"[{request.order_id}] (a) checkItems vc={clock_snap}")
 
-        failed = len(entry["data"].items) == 0
+        failed = len(items) == 0
         print("EVENT A failed ", failed)
-        callback(request.order_id, "a", list(entry["vc"]),
+        callback(request.order_id, "a", clock_snap,
                  failed=failed, error_msg="Items list is empty" if failed else "")
         return empty_pb2.Empty()
 
     # ── Event (b): user data filled ──
     def checkUserData(self, request, context):
         print("checkUserData - B \n")
+        # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
-        incoming = proto_to_list(request.clock)
-        merge_and_increment(entry["vc"], incoming)
-        logger.info(f"[{request.order_id}] (b) checkUserData vc={entry['vc']}")
+            incoming = proto_to_list(request.clock)
+            merge_and_increment(entry["vc"], incoming)
+            clock_snap = list(entry["vc"])
+            user_name    = entry["data"].user_name
+            user_contact = entry["data"].user_contact
+        logger.info(f"[{request.order_id}] (b) checkUserData vc={clock_snap}")
 
-        data   = entry["data"]
-        failed = not (data.user_name and data.user_contact) # currently we only get card nr and order amount
+        failed = not (user_name and user_contact)
         print("EVENT b failed ", failed)
-        callback(request.order_id, "b", list(entry["vc"]),
+        callback(request.order_id, "b", list(clock_snap),
                  failed=failed, error_msg="Missing user fields" if failed else "")
         return empty_pb2.Empty()
 
     # ── Event (c): card format ──
     def checkCard(self, request, context):
         print("checkCard - C\n")
+        # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
-        incoming = proto_to_list(request.clock)
-        merge_and_increment(entry["vc"], incoming)
-        logger.info(f"[{request.order_id}] (c) checkCard vc={entry['vc']}")
+            incoming = proto_to_list(request.clock)
+            merge_and_increment(entry["vc"], incoming)
+            clock_snap = list(entry["vc"])
+            card_nr = entry["data"].card_nr
 
-        card   = entry["data"].card_nr
-        failed = not (card.isdigit() and len(card) == 16)
+        logger.info(f"[{request.order_id}] (c) checkCard vc={clock_snap}")
+
+        failed = not (card_nr.isdigit() and len(card_nr) == 16)
         print("EVENT C failed ", failed)
-        callback(request.order_id, "c", list(entry["vc"]),
+        callback(request.order_id, "c", list(clock_snap),
                  failed=failed, error_msg="Invalid card format" if failed else "")
         return empty_pb2.Empty()
 
@@ -158,7 +173,7 @@ class TransactionVerificationService(transaction_verification_grpc.transactionSe
 
 def serve():
     # Create a gRPC server
-    server = grpc.server(futures.ThreadPoolExecutor())
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     transaction_verification_grpc.add_transactionServiceServicer_to_server(TransactionVerificationService(), server)
     
     # Listen on port 50052

@@ -1,5 +1,7 @@
 FROM python:3.11
 
+ENV TZ=Europe/Tallinn
+
 WORKDIR /app
 
 COPY ./suggestions/requirements.txt .

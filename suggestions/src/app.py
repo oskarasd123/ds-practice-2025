@@ -5,6 +5,7 @@ import grpc
 from concurrent import futures
 import logging
 from google.protobuf import empty_pb2
+import time
 from BigBookAPI import book_script
 
 
@@ -28,6 +29,10 @@ logging.basicConfig(
     filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
+    # handlers=[
+    #     logging.FileHandler("/logs/suggestions_logs.txt"),
+    #     logging.StreamHandler()  # ← also print to docker logs
+    # ]
 )
 
 logger = logging.getLogger(__name__)
@@ -78,14 +83,17 @@ class SuggestionsService(suggestions_grpc.SuggestionsServiceServicer):
 
     # event (f)
     def getSuggestions(self, request, context):
+        # time.sleep(1)
+
         with orders_lock:
             entry = orders.get(request.order_id)
+            incoming = proto_to_list(request.clock)
+            merge_and_increment(entry["vc"], incoming)
+            clock_snap = list(entry["vc"])
         if entry is None:
             context.abort(grpc.StatusCode.NOT_FOUND, f"Order {request.order_id} not found")
 
-        incoming = proto_to_list(request.clock)
-        merge_and_increment(entry["vc"], incoming)
-        logger.info(f"[{request.order_id}] (f) getSuggestions vc={entry['vc']}")
+        logger.info(f"[{request.order_id}] (f) getSuggestions vc={clock_snap}")
 
         books = []
         # for book in request.ordered_books:
@@ -108,8 +116,8 @@ class SuggestionsService(suggestions_grpc.SuggestionsServiceServicer):
         logger.info(f"[{request.order_id}] (f) returning {len(books)} suggestions")
         orch_stub.suggestionsDone(orchestrator.suggestionsDoneRequest(
             order_id=request.order_id,
-            suggestions=books,
-            clock=orchestrator.VectorClock(values=entry["vc"]),
+            suggestions=[b['title'] for b in books], # TODO update proto file so we can also push authors to fronend
+            clock=orchestrator.VectorClock(values=clock_snap),
         ))
 
         return empty_pb2.Empty()
@@ -133,7 +141,7 @@ class SuggestionsService(suggestions_grpc.SuggestionsServiceServicer):
 
 def serve():
     # Create a gRPC server
-    server = grpc.server(futures.ThreadPoolExecutor())
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     # Add HelloService
     suggestions_grpc.add_SuggestionsServiceServicer_to_server(SuggestionsService(), server)
