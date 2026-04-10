@@ -25,10 +25,10 @@ logging.basicConfig(
     # filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
-    handlers=[
-        logging.FileHandler("/logs/fraud_detection_logs.txt"),
-        logging.StreamHandler()  # ← also print to docker logs
-    ]
+    # handlers=[
+    #     logging.FileHandler("/logs/fraud_detection_logs.txt"),
+    #     logging.StreamHandler()  # ← also print to docker logs
+    # ]
 )
 
 logger = logging.getLogger(__name__)
@@ -114,9 +114,9 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionService):
 
         logger.info(f"[{request.order_id}] (e) cardCheck vc={clock_snap}")
 
-        is_fraud = not (isinstance(card_nr, int) and not str(card_nr).startswith('999'))
+        is_fraud = str(card_nr).startswith('999')
         print("EVENT e failed ", is_fraud)
-        callback(request.order_id, "e", list(entry["vc"]), is_fraud=is_fraud)
+        callback(request.order_id, "e", clock_snap, failed=is_fraud, error_msg="Fraud detected" if is_fraud else "",)
 
         return empty_pb2.Empty()
 
