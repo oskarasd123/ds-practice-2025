@@ -40,19 +40,24 @@ class transactionServiceStub(object):
                 request_serializer=transaction__verification__pb2.InitRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.checkItems = channel.unary_unary(
+                '/transaction_verification.transactionService/checkItems',
+                request_serializer=transaction__verification__pb2.EventRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.checkUserData = channel.unary_unary(
+                '/transaction_verification.transactionService/checkUserData',
+                request_serializer=transaction__verification__pb2.EventRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
         self.checkCard = channel.unary_unary(
                 '/transaction_verification.transactionService/checkCard',
-                request_serializer=transaction__verification__pb2.CheckCardRequest.SerializeToString,
+                request_serializer=transaction__verification__pb2.EventRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.checkMoney = channel.unary_unary(
-                '/transaction_verification.transactionService/checkMoney',
-                request_serializer=transaction__verification__pb2.CheckMoneyRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.startPayment = channel.unary_unary(
-                '/transaction_verification.transactionService/startPayment',
-                request_serializer=transaction__verification__pb2.StartPaymentRequest.SerializeToString,
+        self.clearOrder = channel.unary_unary(
+                '/transaction_verification.transactionService/clearOrder',
+                request_serializer=transaction__verification__pb2.ClearRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
 
@@ -66,23 +71,26 @@ class transactionServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def checkItems(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def checkUserData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def checkCard(self, request, context):
-        """called by orchestrator
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def checkMoney(self, request, context):
-        """called by orchestrator and 
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def startPayment(self, request, context):
-        """calls orchestrator when called
-        """
+    def clearOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -95,19 +103,24 @@ def add_transactionServiceServicer_to_server(servicer, server):
                     request_deserializer=transaction__verification__pb2.InitRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
+            'checkItems': grpc.unary_unary_rpc_method_handler(
+                    servicer.checkItems,
+                    request_deserializer=transaction__verification__pb2.EventRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'checkUserData': grpc.unary_unary_rpc_method_handler(
+                    servicer.checkUserData,
+                    request_deserializer=transaction__verification__pb2.EventRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
             'checkCard': grpc.unary_unary_rpc_method_handler(
                     servicer.checkCard,
-                    request_deserializer=transaction__verification__pb2.CheckCardRequest.FromString,
+                    request_deserializer=transaction__verification__pb2.EventRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'checkMoney': grpc.unary_unary_rpc_method_handler(
-                    servicer.checkMoney,
-                    request_deserializer=transaction__verification__pb2.CheckMoneyRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'startPayment': grpc.unary_unary_rpc_method_handler(
-                    servicer.startPayment,
-                    request_deserializer=transaction__verification__pb2.StartPaymentRequest.FromString,
+            'clearOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.clearOrder,
+                    request_deserializer=transaction__verification__pb2.ClearRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -149,6 +162,60 @@ class transactionService(object):
             _registered_method=True)
 
     @staticmethod
+    def checkItems(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/transaction_verification.transactionService/checkItems',
+            transaction__verification__pb2.EventRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def checkUserData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/transaction_verification.transactionService/checkUserData',
+            transaction__verification__pb2.EventRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
     def checkCard(request,
             target,
             options=(),
@@ -163,7 +230,7 @@ class transactionService(object):
             request,
             target,
             '/transaction_verification.transactionService/checkCard',
-            transaction__verification__pb2.CheckCardRequest.SerializeToString,
+            transaction__verification__pb2.EventRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -176,7 +243,7 @@ class transactionService(object):
             _registered_method=True)
 
     @staticmethod
-    def checkMoney(request,
+    def clearOrder(request,
             target,
             options=(),
             channel_credentials=None,
@@ -189,35 +256,8 @@ class transactionService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/transaction_verification.transactionService/checkMoney',
-            transaction__verification__pb2.CheckMoneyRequest.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def startPayment(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/transaction_verification.transactionService/startPayment',
-            transaction__verification__pb2.StartPaymentRequest.SerializeToString,
+            '/transaction_verification.transactionService/clearOrder',
+            transaction__verification__pb2.ClearRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,

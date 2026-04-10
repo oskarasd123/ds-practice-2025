@@ -25,25 +25,19 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12orchestrator.proto\x12\x0corchestrator\x1a\x1bgoogle/protobuf/empty.proto\"s\n\x0bVectorClock\x12\x35\n\x06values\x18\x01 \x03(\x0b\x32%.orchestrator.VectorClock.ValuesEntry\x1a-\n\x0bValuesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"6\n\x10\x66raudDoneRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x10\n\x08is_fraud\x18\x02 \x01(\x08\"F\n\x17verificationDoneRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x19\n\x11payment_completed\x18\x02 \x01(\x08\"?\n\x16suggestionsDoneRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x13\n\x0bsuggestions\x18\x02 \x03(\t2\xfe\x01\n\x13OrchestratorService\x12\x43\n\tfraudDone\x12\x1e.orchestrator.fraudDoneRequest\x1a\x16.google.protobuf.Empty\x12Q\n\x10verificationDone\x12%.orchestrator.verificationDoneRequest\x1a\x16.google.protobuf.Empty\x12O\n\x0fsuggestionsDone\x12$.orchestrator.suggestionsDoneRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12orchestrator.proto\x12\x0corchestrator\x1a\x1bgoogle/protobuf/empty.proto\"\x1d\n\x0bVectorClock\x12\x0e\n\x06values\x18\x01 \x03(\x03\"\x97\x01\n\x10\x45ventDoneRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x12\n\nevent_name\x18\x02 \x01(\t\x12(\n\x05\x63lock\x18\x03 \x01(\x0b\x32\x19.orchestrator.VectorClock\x12\x0e\n\x06\x66\x61iled\x18\x04 \x01(\x08\x12\x11\n\terror_msg\x18\x05 \x01(\t\x12\x10\n\x08is_fraud\x18\x06 \x01(\x08\"i\n\x16suggestionsDoneRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x13\n\x0bsuggestions\x18\x02 \x03(\t\x12(\n\x05\x63lock\x18\x03 \x01(\x0b\x32\x19.orchestrator.VectorClock2\xab\x01\n\x13OrchestratorService\x12\x43\n\teventDone\x12\x1e.orchestrator.EventDoneRequest\x1a\x16.google.protobuf.Empty\x12O\n\x0fsuggestionsDone\x12$.orchestrator.suggestionsDoneRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'orchestrator_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_VECTORCLOCK_VALUESENTRY']._loaded_options = None
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_options = b'8\001'
   _globals['_VECTORCLOCK']._serialized_start=65
-  _globals['_VECTORCLOCK']._serialized_end=180
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_start=135
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_end=180
-  _globals['_FRAUDDONEREQUEST']._serialized_start=182
-  _globals['_FRAUDDONEREQUEST']._serialized_end=236
-  _globals['_VERIFICATIONDONEREQUEST']._serialized_start=238
-  _globals['_VERIFICATIONDONEREQUEST']._serialized_end=308
-  _globals['_SUGGESTIONSDONEREQUEST']._serialized_start=310
-  _globals['_SUGGESTIONSDONEREQUEST']._serialized_end=373
-  _globals['_ORCHESTRATORSERVICE']._serialized_start=376
-  _globals['_ORCHESTRATORSERVICE']._serialized_end=630
+  _globals['_VECTORCLOCK']._serialized_end=94
+  _globals['_EVENTDONEREQUEST']._serialized_start=97
+  _globals['_EVENTDONEREQUEST']._serialized_end=248
+  _globals['_SUGGESTIONSDONEREQUEST']._serialized_start=250
+  _globals['_SUGGESTIONSDONEREQUEST']._serialized_end=355
+  _globals['_ORCHESTRATORSERVICE']._serialized_start=358
+  _globals['_ORCHESTRATORSERVICE']._serialized_end=529
 # @@protoc_insertion_point(module_scope)

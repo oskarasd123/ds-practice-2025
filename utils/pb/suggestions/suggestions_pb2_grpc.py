@@ -45,6 +45,11 @@ class SuggestionsServiceStub(object):
                 request_serializer=suggestions__pb2.getSuggestionsRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.clearOrder = channel.unary_unary(
+                '/suggestions.SuggestionsService/clearOrder',
+                request_serializer=suggestions__pb2.ClearRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class SuggestionsServiceServicer(object):
@@ -57,8 +62,13 @@ class SuggestionsServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def getSuggestions(self, request, context):
-        """is called by transaction_verification and fraud_detection. then calls orchestrator
-        """
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def clearOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -74,6 +84,11 @@ def add_SuggestionsServiceServicer_to_server(servicer, server):
             'getSuggestions': grpc.unary_unary_rpc_method_handler(
                     servicer.getSuggestions,
                     request_deserializer=suggestions__pb2.getSuggestionsRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'clearOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.clearOrder,
+                    request_deserializer=suggestions__pb2.ClearRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -130,6 +145,33 @@ class SuggestionsService(object):
             target,
             '/suggestions.SuggestionsService/getSuggestions',
             suggestions__pb2.getSuggestionsRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def clearOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/suggestions.SuggestionsService/clearOrder',
+            suggestions__pb2.ClearRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,

@@ -1,29 +1,25 @@
 syntax = "proto3";
-
 package suggestions;
-
 import "google/protobuf/empty.proto";
 
 service SuggestionsService {
-    rpc initOrder (InitRequest) returns (google.protobuf.Empty);
-    rpc getSuggestions (getSuggestionsRequest) returns (google.protobuf.Empty); // is called by transaction_verification and fraud_detection. then calls orchestrator
+    rpc initOrder      (InitRequest)          returns (google.protobuf.Empty);
+    rpc getSuggestions (getSuggestionsRequest) returns (google.protobuf.Empty);
+    rpc clearOrder     (ClearRequest)         returns (google.protobuf.Empty);
 }
 
 message VectorClock {
-    map<string, uint64> values = 1;
+    repeated int64 values = 1;
 }
 
-message OdrerData { // duplicated across all proto files
-    string card_nr = 1;
-    float order_ammount = 2;
-}
-
-message InitRequest {
-    int64 order_id = 1;
-    OdrerData orderData = 2;
-}
+message InitRequest { int64 order_id = 1; }
 
 message getSuggestionsRequest {
-    int64 order_id = 1;
-    VectorClock clock = 2;
+    int64       order_id = 1;
+    VectorClock clock    = 2;
+}
+
+message ClearRequest {
+    int64       order_id    = 1;
+    VectorClock final_clock = 2;
 }

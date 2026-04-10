@@ -25,27 +25,23 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x66raud_detection.proto\x12\x0f\x66raud_detection\x1a\x1bgoogle/protobuf/empty.proto\"3\n\tOdrerData\x12\x0f\n\x07\x63\x61rd_nr\x18\x01 \x01(\t\x12\x15\n\rorder_ammount\x18\x02 \x01(\x02\"v\n\x0bVectorClock\x12\x38\n\x06values\x18\x01 \x03(\x0b\x32(.fraud_detection.VectorClock.ValuesEntry\x1a-\n\x0bValuesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"N\n\x0bInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12-\n\torderData\x18\x02 \x01(\x0b\x32\x1a.fraud_detection.OdrerData\"$\n\x10\x42ookCheckRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\"Q\n\x10UserCheckRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12+\n\x05\x63lock\x18\x02 \x01(\x0b\x32\x1c.fraud_detection.VectorClock2\xea\x01\n\x15\x46raudDetectionService\x12\x41\n\tinitOrder\x12\x1c.fraud_detection.InitRequest\x1a\x16.google.protobuf.Empty\x12\x46\n\tbookCheck\x12!.fraud_detection.BookCheckRequest\x1a\x16.google.protobuf.Empty\x12\x46\n\tuserCheck\x12!.fraud_detection.UserCheckRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x66raud_detection.proto\x12\x0f\x66raud_detection\x1a\x1bgoogle/protobuf/empty.proto\"\x1d\n\x0bVectorClock\x12\x0e\n\x06values\x18\x01 \x03(\x03\"2\n\tOrderData\x12\x0f\n\x07\x63\x61rd_nr\x18\x01 \x01(\t\x12\x14\n\x0corder_amount\x18\x02 \x01(\x02\"I\n\x0bInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12(\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x1a.fraud_detection.OrderData\"M\n\x0c\x45ventRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12+\n\x05\x63lock\x18\x02 \x01(\x0b\x32\x1c.fraud_detection.VectorClock\"S\n\x0c\x43learRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x31\n\x0b\x66inal_clock\x18\x02 \x01(\x0b\x32\x1c.fraud_detection.VectorClock2\xa7\x02\n\x15\x46raudDetectionService\x12\x41\n\tinitOrder\x12\x1c.fraud_detection.InitRequest\x1a\x16.google.protobuf.Empty\x12\x42\n\tuserCheck\x12\x1d.fraud_detection.EventRequest\x1a\x16.google.protobuf.Empty\x12\x42\n\tcardCheck\x12\x1d.fraud_detection.EventRequest\x1a\x16.google.protobuf.Empty\x12\x43\n\nclearOrder\x12\x1d.fraud_detection.ClearRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'fraud_detection_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_VECTORCLOCK_VALUESENTRY']._loaded_options = None
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_options = b'8\001'
-  _globals['_ODRERDATA']._serialized_start=71
-  _globals['_ODRERDATA']._serialized_end=122
-  _globals['_VECTORCLOCK']._serialized_start=124
-  _globals['_VECTORCLOCK']._serialized_end=242
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_start=197
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_end=242
-  _globals['_INITREQUEST']._serialized_start=244
-  _globals['_INITREQUEST']._serialized_end=322
-  _globals['_BOOKCHECKREQUEST']._serialized_start=324
-  _globals['_BOOKCHECKREQUEST']._serialized_end=360
-  _globals['_USERCHECKREQUEST']._serialized_start=362
-  _globals['_USERCHECKREQUEST']._serialized_end=443
-  _globals['_FRAUDDETECTIONSERVICE']._serialized_start=446
-  _globals['_FRAUDDETECTIONSERVICE']._serialized_end=680
+  _globals['_VECTORCLOCK']._serialized_start=71
+  _globals['_VECTORCLOCK']._serialized_end=100
+  _globals['_ORDERDATA']._serialized_start=102
+  _globals['_ORDERDATA']._serialized_end=152
+  _globals['_INITREQUEST']._serialized_start=154
+  _globals['_INITREQUEST']._serialized_end=227
+  _globals['_EVENTREQUEST']._serialized_start=229
+  _globals['_EVENTREQUEST']._serialized_end=306
+  _globals['_CLEARREQUEST']._serialized_start=308
+  _globals['_CLEARREQUEST']._serialized_end=391
+  _globals['_FRAUDDETECTIONSERVICE']._serialized_start=394
+  _globals['_FRAUDDETECTIONSERVICE']._serialized_end=689
 # @@protoc_insertion_point(module_scope)

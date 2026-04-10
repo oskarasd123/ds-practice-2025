@@ -35,14 +35,9 @@ class OrchestratorServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.fraudDone = channel.unary_unary(
-                '/orchestrator.OrchestratorService/fraudDone',
-                request_serializer=orchestrator__pb2.fraudDoneRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.verificationDone = channel.unary_unary(
-                '/orchestrator.OrchestratorService/verificationDone',
-                request_serializer=orchestrator__pb2.verificationDoneRequest.SerializeToString,
+        self.eventDone = channel.unary_unary(
+                '/orchestrator.OrchestratorService/eventDone',
+                request_serializer=orchestrator__pb2.EventDoneRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.suggestionsDone = channel.unary_unary(
@@ -55,13 +50,7 @@ class OrchestratorServiceStub(object):
 class OrchestratorServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def fraudDone(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def verificationDone(self, request, context):
+    def eventDone(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -76,14 +65,9 @@ class OrchestratorServiceServicer(object):
 
 def add_OrchestratorServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'fraudDone': grpc.unary_unary_rpc_method_handler(
-                    servicer.fraudDone,
-                    request_deserializer=orchestrator__pb2.fraudDoneRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'verificationDone': grpc.unary_unary_rpc_method_handler(
-                    servicer.verificationDone,
-                    request_deserializer=orchestrator__pb2.verificationDoneRequest.FromString,
+            'eventDone': grpc.unary_unary_rpc_method_handler(
+                    servicer.eventDone,
+                    request_deserializer=orchestrator__pb2.EventDoneRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'suggestionsDone': grpc.unary_unary_rpc_method_handler(
@@ -103,7 +87,7 @@ class OrchestratorService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def fraudDone(request,
+    def eventDone(request,
             target,
             options=(),
             channel_credentials=None,
@@ -116,35 +100,8 @@ class OrchestratorService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/orchestrator.OrchestratorService/fraudDone',
-            orchestrator__pb2.fraudDoneRequest.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def verificationDone(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/orchestrator.OrchestratorService/verificationDone',
-            orchestrator__pb2.verificationDoneRequest.SerializeToString,
+            '/orchestrator.OrchestratorService/eventDone',
+            orchestrator__pb2.EventDoneRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,

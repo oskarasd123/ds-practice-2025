@@ -25,29 +25,23 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x18transaction_verification\x1a\x1bgoogle/protobuf/empty.proto\"\x7f\n\x0bVectorClock\x12\x41\n\x06values\x18\x01 \x03(\x0b\x32\x31.transaction_verification.VectorClock.ValuesEntry\x1a-\n\x0bValuesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"3\n\tOdrerData\x12\x0f\n\x07\x63\x61rd_nr\x18\x01 \x01(\t\x12\x15\n\rorder_ammount\x18\x02 \x01(\x02\"W\n\x0bInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x36\n\torderData\x18\x02 \x01(\x0b\x32#.transaction_verification.OdrerData\"Z\n\x10\x43heckCardRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x34\n\x05\x63lock\x18\x02 \x01(\x0b\x32%.transaction_verification.VectorClock\"[\n\x11\x43heckMoneyRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x34\n\x05\x63lock\x18\x02 \x01(\x0b\x32%.transaction_verification.VectorClock\"]\n\x13StartPaymentRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x34\n\x05\x63lock\x18\x02 \x01(\x0b\x32%.transaction_verification.VectorClock2\xdb\x02\n\x12transactionService\x12J\n\tinitOrder\x12%.transaction_verification.InitRequest\x1a\x16.google.protobuf.Empty\x12O\n\tcheckCard\x12*.transaction_verification.CheckCardRequest\x1a\x16.google.protobuf.Empty\x12Q\n\ncheckMoney\x12+.transaction_verification.CheckMoneyRequest\x1a\x16.google.protobuf.Empty\x12U\n\x0cstartPayment\x12-.transaction_verification.StartPaymentRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x18transaction_verification\x1a\x1bgoogle/protobuf/empty.proto\"\x1d\n\x0bVectorClock\x12\x0e\n\x06values\x18\x01 \x03(\x03\"j\n\tOrderData\x12\x0f\n\x07\x63\x61rd_nr\x18\x01 \x01(\t\x12\x14\n\x0corder_amount\x18\x02 \x01(\x02\x12\r\n\x05items\x18\x03 \x03(\t\x12\x11\n\tuser_name\x18\x04 \x01(\t\x12\x14\n\x0cuser_contact\x18\x05 \x01(\t\"R\n\x0bInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x31\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32#.transaction_verification.OrderData\"V\n\x0c\x45ventRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12\x34\n\x05\x63lock\x18\x02 \x01(\x0b\x32%.transaction_verification.VectorClock\"\\\n\x0c\x43learRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x03\x12:\n\x0b\x66inal_clock\x18\x02 \x01(\x0b\x32%.transaction_verification.VectorClock2\x9a\x03\n\x12transactionService\x12J\n\tinitOrder\x12%.transaction_verification.InitRequest\x1a\x16.google.protobuf.Empty\x12L\n\ncheckItems\x12&.transaction_verification.EventRequest\x1a\x16.google.protobuf.Empty\x12O\n\rcheckUserData\x12&.transaction_verification.EventRequest\x1a\x16.google.protobuf.Empty\x12K\n\tcheckCard\x12&.transaction_verification.EventRequest\x1a\x16.google.protobuf.Empty\x12L\n\nclearOrder\x12&.transaction_verification.ClearRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'transaction_verification_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_VECTORCLOCK_VALUESENTRY']._loaded_options = None
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_options = b'8\001'
   _globals['_VECTORCLOCK']._serialized_start=89
-  _globals['_VECTORCLOCK']._serialized_end=216
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_start=171
-  _globals['_VECTORCLOCK_VALUESENTRY']._serialized_end=216
-  _globals['_ODRERDATA']._serialized_start=218
-  _globals['_ODRERDATA']._serialized_end=269
-  _globals['_INITREQUEST']._serialized_start=271
-  _globals['_INITREQUEST']._serialized_end=358
-  _globals['_CHECKCARDREQUEST']._serialized_start=360
-  _globals['_CHECKCARDREQUEST']._serialized_end=450
-  _globals['_CHECKMONEYREQUEST']._serialized_start=452
-  _globals['_CHECKMONEYREQUEST']._serialized_end=543
-  _globals['_STARTPAYMENTREQUEST']._serialized_start=545
-  _globals['_STARTPAYMENTREQUEST']._serialized_end=638
-  _globals['_TRANSACTIONSERVICE']._serialized_start=641
-  _globals['_TRANSACTIONSERVICE']._serialized_end=988
+  _globals['_VECTORCLOCK']._serialized_end=118
+  _globals['_ORDERDATA']._serialized_start=120
+  _globals['_ORDERDATA']._serialized_end=226
+  _globals['_INITREQUEST']._serialized_start=228
+  _globals['_INITREQUEST']._serialized_end=310
+  _globals['_EVENTREQUEST']._serialized_start=312
+  _globals['_EVENTREQUEST']._serialized_end=398
+  _globals['_CLEARREQUEST']._serialized_start=400
+  _globals['_CLEARREQUEST']._serialized_end=492
+  _globals['_TRANSACTIONSERVICE']._serialized_start=495
+  _globals['_TRANSACTIONSERVICE']._serialized_end=905
 # @@protoc_insertion_point(module_scope)

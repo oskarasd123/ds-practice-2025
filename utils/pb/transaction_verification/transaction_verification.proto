@@ -1,41 +1,27 @@
 syntax = "proto3";
-
 package transaction_verification;
-
 import "google/protobuf/empty.proto";
 
 service transactionService {
-    rpc initOrder (InitRequest) returns (google.protobuf.Empty);
-    rpc checkCard (CheckCardRequest) returns (google.protobuf.Empty); // called by orchestrator
-    rpc checkMoney (CheckMoneyRequest) returns (google.protobuf.Empty); // called by orchestrator and 
-    rpc startPayment (StartPaymentRequest) returns (google.protobuf.Empty); // calls orchestrator when called
+    rpc initOrder     (InitRequest)  returns (google.protobuf.Empty);
+    rpc checkItems    (EventRequest) returns (google.protobuf.Empty);
+    rpc checkUserData (EventRequest) returns (google.protobuf.Empty);
+    rpc checkCard     (EventRequest) returns (google.protobuf.Empty);
+    rpc clearOrder    (ClearRequest) returns (google.protobuf.Empty);
 }
 
 message VectorClock {
-    map<string, uint64> values = 1;
+    repeated int64 values = 1;
 }
 
-message OdrerData { // duplicated across all proto files
-    string card_nr = 1;
-    float order_ammount = 2;
+message OrderData {
+    string          card_nr       = 1;
+    float           order_amount  = 2;
+    repeated string items         = 3;
+    string          user_name     = 4;
+    string          user_contact  = 5;
 }
 
-message InitRequest {
-    int64 order_id = 1;
-    OdrerData orderData = 2;
-}
-
-message CheckCardRequest {
-    int64 order_id = 1;
-    VectorClock clock = 2;
-}
-
-message CheckMoneyRequest {
-    int64 order_id = 1;
-    VectorClock clock = 2;
-}
-
-message StartPaymentRequest {
-    int64 order_id = 1;
-    VectorClock clock = 2;
-}
+message InitRequest  { int64 order_id = 1; OrderData data = 2; }
+message EventRequest { int64 order_id = 1; VectorClock clock = 2; }
+message ClearRequest { int64 order_id = 1; VectorClock final_clock = 2; }

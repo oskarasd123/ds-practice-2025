@@ -40,14 +40,19 @@ class FraudDetectionServiceStub(object):
                 request_serializer=fraud__detection__pb2.InitRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
-        self.bookCheck = channel.unary_unary(
-                '/fraud_detection.FraudDetectionService/bookCheck',
-                request_serializer=fraud__detection__pb2.BookCheckRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
         self.userCheck = channel.unary_unary(
                 '/fraud_detection.FraudDetectionService/userCheck',
-                request_serializer=fraud__detection__pb2.UserCheckRequest.SerializeToString,
+                request_serializer=fraud__detection__pb2.EventRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.cardCheck = channel.unary_unary(
+                '/fraud_detection.FraudDetectionService/cardCheck',
+                request_serializer=fraud__detection__pb2.EventRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.clearOrder = channel.unary_unary(
+                '/fraud_detection.FraudDetectionService/clearOrder',
+                request_serializer=fraud__detection__pb2.ClearRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
 
@@ -61,15 +66,22 @@ class FraudDetectionServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def bookCheck(self, request, context):
-        """called by orchestrator
+    def userCheck(self, request, context):
+        """event (d)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def userCheck(self, request, context):
-        """is called by transaction verification and fraud detection itself. only processes when both have arrived and vector clock is correct.
+    def cardCheck(self, request, context):
+        """event (e)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def clearOrder(self, request, context):
+        """bonus
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -83,14 +95,19 @@ def add_FraudDetectionServiceServicer_to_server(servicer, server):
                     request_deserializer=fraud__detection__pb2.InitRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'bookCheck': grpc.unary_unary_rpc_method_handler(
-                    servicer.bookCheck,
-                    request_deserializer=fraud__detection__pb2.BookCheckRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
             'userCheck': grpc.unary_unary_rpc_method_handler(
                     servicer.userCheck,
-                    request_deserializer=fraud__detection__pb2.UserCheckRequest.FromString,
+                    request_deserializer=fraud__detection__pb2.EventRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'cardCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.cardCheck,
+                    request_deserializer=fraud__detection__pb2.EventRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'clearOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.clearOrder,
+                    request_deserializer=fraud__detection__pb2.ClearRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -132,33 +149,6 @@ class FraudDetectionService(object):
             _registered_method=True)
 
     @staticmethod
-    def bookCheck(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/fraud_detection.FraudDetectionService/bookCheck',
-            fraud__detection__pb2.BookCheckRequest.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
     def userCheck(request,
             target,
             options=(),
@@ -173,7 +163,61 @@ class FraudDetectionService(object):
             request,
             target,
             '/fraud_detection.FraudDetectionService/userCheck',
-            fraud__detection__pb2.UserCheckRequest.SerializeToString,
+            fraud__detection__pb2.EventRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def cardCheck(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fraud_detection.FraudDetectionService/cardCheck',
+            fraud__detection__pb2.EventRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def clearOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fraud_detection.FraudDetectionService/clearOrder',
+            fraud__detection__pb2.ClearRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
