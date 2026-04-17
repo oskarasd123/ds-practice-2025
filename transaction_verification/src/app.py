@@ -30,10 +30,6 @@ logging.basicConfig(
     filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
-    # handlers=[
-    #     logging.FileHandler("/logs/transaction_logs.txt"),
-    #     logging.StreamHandler()  # ← also print to docker logs
-    # ]
 )
 
 logger = logging.getLogger(__name__)
@@ -175,7 +171,7 @@ def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     transaction_verification_grpc.add_transactionServiceServicer_to_server(TransactionVerificationService(), server)
-    
+
     # Listen on port 50052
     server.add_insecure_port("[::]:" + PORT)
 

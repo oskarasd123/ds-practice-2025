@@ -21,14 +21,10 @@ import orchestrator_pb2 as orchestrator
 import orchestrator_pb2_grpc as orchestrator_grpc
 
 logging.basicConfig(
-    # filename="/logs/fraud_detection_logs.txt",
-    # filemode="a",
+    filename="/logs/fraud_detection_logs.txt",
+    filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
-    # handlers=[
-    #     logging.FileHandler("/logs/fraud_detection_logs.txt"),
-    #     logging.StreamHandler()  # ← also print to docker logs
-    # ]
 )
 
 logger = logging.getLogger(__name__)

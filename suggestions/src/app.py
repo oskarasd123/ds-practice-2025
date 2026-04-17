@@ -29,10 +29,6 @@ logging.basicConfig(
     filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
-    # handlers=[
-    #     logging.FileHandler("/logs/suggestions_logs.txt"),
-    #     logging.StreamHandler()  # ← also print to docker logs
-    # ]
 )
 
 logger = logging.getLogger(__name__)
@@ -143,7 +139,7 @@ def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
-    # Add HelloService
+    # Add Service
     suggestions_grpc.add_SuggestionsServiceServicer_to_server(SuggestionsService(), server)
 
     # Listen on port 50053
@@ -151,7 +147,6 @@ def serve():
 
     # Start the server
     server.start()
-    # print(f"Server started. Listening on port {port}.")
     logger.info(f"Server started. Listening on port {port}.")
 
     # Keep thread alive

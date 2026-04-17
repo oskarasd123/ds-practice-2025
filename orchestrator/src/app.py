@@ -38,6 +38,11 @@ sys.path.insert(0, suggestions_grpc_path)
 import suggestions_pb2 as suggestions
 import suggestions_pb2_grpc as suggestions_grpc
 
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
+sys.path.insert(0, order_queue_grpc_path)
+import order_queue_pb2 as order_queue
+import order_queue_pb2_grpc as order_queue_grpc
+
 orchestrator_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/orchestrator'))
 sys.path.insert(0, orchestrator_grpc_path)
 import orchestrator_pb2 as orchestrator
@@ -50,13 +55,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
 )
-
-# Set up logging configuration for the console only
-# logging.basicConfig(
-#     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
-#     level=logging.INFO,
-#     handlers=[logging.StreamHandler()]
-# )
 
 logger = logging.getLogger(__name__)
 debug_flag = os.getenv("DEBUG_FLAG", "False")
