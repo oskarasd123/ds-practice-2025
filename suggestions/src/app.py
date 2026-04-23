@@ -24,6 +24,15 @@ sys.path.insert(0, orchestrator_grpc_path)
 import orchestrator_pb2 as orchestrator
 import orchestrator_pb2_grpc as orchestrator_grpc
 
+# --- Setup paths for gRPC imports ---
+FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
+root_path = os.path.abspath(os.path.join(FILE, '../../..'))
+
+# Insert path exclusively for suggestions (other services are not used here)
+sys.path.insert(0, os.path.join(root_path, 'utils/pb/suggestions'))
+import suggestions_pb2 as suggestions
+import suggestions_pb2_grpc as suggestions_grpc
+
 logging.basicConfig(
     filename="/logs/suggestions_logs.txt",
     filemode="a",
@@ -143,7 +152,7 @@ def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
-    # Add HelloService
+    # Add Service
     suggestions_grpc.add_SuggestionsServiceServicer_to_server(SuggestionsService(), server)
 
     # Listen on port 50053
@@ -151,7 +160,6 @@ def serve():
 
     # Start the server
     server.start()
-    # print(f"Server started. Listening on port {port}.")
     logger.info(f"Server started. Listening on port {port}.")
 
     # Keep thread alive

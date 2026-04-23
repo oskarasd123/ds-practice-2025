@@ -23,6 +23,7 @@ from google.protobuf import empty_pb2
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
+root_path = os.path.abspath(os.path.join(FILE, '../../..'))
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 sys.path.insert(0, fraud_detection_grpc_path)
 import fraud_detection_pb2 as fraud_detection
@@ -43,6 +44,19 @@ sys.path.insert(0, orchestrator_grpc_path)
 import orchestrator_pb2 as orchestrator
 import orchestrator_pb2_grpc as orchestrator_grpc
 
+
+sys.path.insert(0, os.path.join(root_path, 'utils/pb/order_queue'))
+import order_queue_pb2 as order_queue
+import order_queue_pb2_grpc as order_queue_grpc
+
+sys.path.insert(0, os.path.join(root_path, 'utils/pb/orchestrator'))
+try:
+    import orchestrator_pb2 as orchestrator_pb
+    import orchestrator_pb2_grpc as orchestrator_grpc
+except ImportError:
+    pass 
+
+
 # Configure logging to file and console
 logging.basicConfig(
     filename="/logs/orchestrator_logs.txt",
@@ -51,12 +65,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-# Set up logging configuration for the console only
-# logging.basicConfig(
-#     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
-#     level=logging.INFO,
-#     handlers=[logging.StreamHandler()]
-# )
 
 logger = logging.getLogger(__name__)
 debug_flag = os.getenv("DEBUG_FLAG", "False")
@@ -331,16 +339,18 @@ def serve_grpc():
 
 # Create a simple Flask app.
 app = Flask(__name__)
-# Enable CORS for the app.
 CORS(app, resources={r'/*': {'origins': '*'}})
 
-# Define a GET endpoint.
+
+def enqueue_order(order_id, is_express):
+    """Sends approved order to the queue."""
+    with grpc.insecure_channel("order_queue:50054") as channel:
+        stub = order_queue_grpc.OrderQueueServiceStub(channel)
+        priority = 1 if is_express else 5 # Lower number = higher priority
+        stub.Enqueue(order_queue.EnqueueRequest(order_id=str(order_id), priority=priority))
+
 @app.route('/', methods=['GET'])
 def index():
-    """
-    Responds with 'Hello, [name]' when a GET request is made to '/' endpoint.
-    """
-    # Return the response.
     return "hello orchestrator"
 
 @app.route('/checkout', methods=['POST'])
@@ -348,18 +358,23 @@ def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
+    data = request.get_json()
     # Get request object data to json
-    request_data = json.loads(request.data)
     order_id = int.from_bytes(os.urandom(4)) # equivalent to random.randint(0, 2**63 - 1) a random 64 bit unsigned integer
     # Print request object data
 
     # quantity = sum([item["quantity"] for item in request_data["items"]])
-    failed, error_msg, is_fraud, suggested_books = orchestrator_checkout_flow(order_id, request_data)
+    failed, error_msg, is_fraud, suggested_books = orchestrator_checkout_flow(order_id, data)
 
     if failed:
         return jsonify({'orderId': str(order_id), 'status': 'Order Rejected',
                         'suggestedBooks': [], 'reason': error_msg})
 
+    try:
+        is_express = (data.get("shippingMethod") in ["Express", "Next-Day"])
+        enqueue_order(order_id, is_express)
+    except Exception as e:
+        logger.error(f"Failed to enqueue order: {e}")
 
     return jsonify({
         'orderId': str(order_id),

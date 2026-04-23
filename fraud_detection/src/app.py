@@ -1,14 +1,20 @@
 import sys
 import os
-import threading
 from concurrent import futures
 from google.protobuf import empty_pb2
 
 import grpc
 import logging
 import time
+import logging
+import threading
 
+# --- Path setups for gRPC imports ---
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
+root_path = os.path.abspath(os.path.join(FILE, '../../..'))
+
+# Залишаємо ТІЛЬКИ fraud_detection, бо інші тут не використовуються!
+sys.path.insert(0, os.path.join(root_path, 'utils/pb/fraud_detection'))
 
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 sys.path.insert(0, fraud_detection_grpc_path)
