@@ -12,4 +12,6 @@ cd ../executor
 python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./executor.proto
 cd ../order_queue
 python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./order_queue.proto
+cd ../database
+python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./database.proto
 cd ../../..
