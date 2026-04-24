@@ -8,4 +8,8 @@ cd ../suggestions
 python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./suggestions.proto
 cd ../orchestrator
 python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./orchestrator.proto
+cd ../executor
+python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./executor.proto
+cd ../order_queue
+python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./order_queue.proto
 cd ../../..

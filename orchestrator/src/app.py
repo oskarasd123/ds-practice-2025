@@ -93,11 +93,12 @@ TOTAL_SVCS = 3
 fraud_channel = grpc.insecure_channel(f'fraud_detection:{FRAUD_DETECTION_PORT}')
 verification_channel = grpc.insecure_channel(f'transaction_verification:{TRANSACTION_PORT}')
 suggestion_channel = grpc.insecure_channel(f"suggestions:{SUGGESTIONS_PORT}")
+executor_channel = grpc.insecure_channel("order_queue:50054")
 
 fraud_stub = fraud_detection_grpc.FraudDetectionServiceStub(fraud_channel)
 verification_stub = transaction_verification_grpc.transactionServiceStub(verification_channel)
 suggestion_stub = suggestions_grpc.SuggestionsServiceStub(suggestion_channel)
-
+executor_stub = order_queue_grpc.OrderQueueServiceStub(executor_channel)
 # ── Per-order coordination state ──
 class OrderFlow:
     def __init__(self):
@@ -344,10 +345,8 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 
 def enqueue_order(order_id, is_express):
     """Sends approved order to the queue."""
-    with grpc.insecure_channel("order_queue:50054") as channel:
-        stub = order_queue_grpc.OrderQueueServiceStub(channel)
-        priority = 1 if is_express else 5 # Lower number = higher priority
-        stub.Enqueue(order_queue.EnqueueRequest(order_id=str(order_id), priority=priority))
+    priority = 1 if is_express else 5 # Lower number = higher priority
+    executor_stub.Enqueue(order_queue.EnqueueRequest(order_id=str(order_id), priority=priority))
 
 @app.route('/', methods=['GET'])
 def index():
