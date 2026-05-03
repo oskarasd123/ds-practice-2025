@@ -45,23 +45,36 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
 
     def Coordinator(self, request, context):
         """Accepts the new leader."""
-        self.leader_id = request.leader_id
-        self.is_leader = (self.id == self.leader_id)
-        logger.info(f"Node {request.leader_id} is the new COORDINATOR.")
-        return executor_pb2.CoordinatorResponse(ok=True)
+        previous_leader = self.leader_id
+        ok = False
+        if self.id < request.leader_id:
+            ok = True
+            if request.become_leader:
+                self.leader_id = request.leader_id
+                if self.leader_id != request.leader_id:
+                    logger.info(f"Node {request.leader_id} is the new COORDINATOR.")
+                self.is_leader = False
+        elif self.id == request.leader_id:
+            pass
+        else:
+            logger.warning(f"lower node proclaimed leadership")
+        return executor_pb2.CoordinatorResponse(ok=ok, previous_leader=previous_leader)
 
     def Heartbeat(self, request, context):
         """Simple health check response."""
         return executor_pb2.HeartbeatResponse(is_alive=True)
     
     def Read(self, request, context):
-        return executor_pb2.ReadResponse(self.data.get(request.key))
+        return executor_pb2.ReadResponse(value=self.data.get(request.key))
     
     def Write(self, request, context):
         if request.key is not None and request.value is not None:
             self.data[request.key] = request.value
             return executor_pb2.WriteResponse(success=True)
         return executor_pb2.WriteResponse(success=False)
+    
+    def GetStock(self, request, context):
+        return executor_pb2.StockResponse(all_items=self.data.keys())
 
     # --- Active Logic ---
     def start_election(self):
@@ -70,13 +83,13 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
         higher_nodes = [node for node in self.known_ids if node > self.id]
         
         if not higher_nodes:
-            self.become_leader()
+            ok, prevoius_leader = self.proclaim_leadership(True)
+            self.become_leader(prevoius_leader)
             return
 
         answers = 0
         for node_id in higher_nodes:
             try:
-                # Assuming executors are available on internal network names like executor_1:50055
                 with grpc.insecure_channel(f'executor_{node_id}:50055') as channel:
                     stub = executor_grpc.ExecutorServiceStub(channel)
                     response = stub.Election(executor_pb2.ElectionRequest(sender_id=self.id), timeout=2)
@@ -86,34 +99,77 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
                 pass # Node is down
         
         if answers == 0:
-            self.become_leader()
+            ok, prevoius_leader = self.proclaim_leadership(True)
+            self.become_leader(prevoius_leader)
         else:
             logger.info("Higher node responded. Waiting for COORDINATOR message.")
 
-    def become_leader(self):
-        self.is_leader = True
-        self.leader_id = self.id
-        logger.info(f"*** I AM THE NEW LEADER ***")
-        
-        # Broadcast victory to all lower nodes
-        lower_nodes = [node for node in self.known_ids if node < self.id]
-        for node_id in lower_nodes:
+    def proclaim_leadership(self, become_leader = False):
+        previous_leaders = []
+        ok = True
+        #logger.info(f"{self.id} proclaiming leadership with become leader: {become_leader}")
+        for node_id in self.known_ids:
             try:
                 with grpc.insecure_channel(f'executor_{node_id}:50055') as channel:
                     stub = executor_grpc.ExecutorServiceStub(channel)
-                    stub.Coordinator(executor_pb2.CoordinatorRequest(leader_id=self.id), timeout=2)
-            except grpc.RpcError:
-                pass
+                    response = stub.Coordinator(executor_pb2.CoordinatorRequest(leader_id=self.id, become_leader=become_leader), timeout=1)
+                    if response.previous_leader != 0: # None becomes 0 through grpc call
+                        previous_leaders.append(response.previous_leader)
+                    if not response.ok:
+                        ok = False
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                    pass
+                else:
+                    logger.error(f"gRPC error with node {node_id}: {e.code()} - {e.details()}")
+            except Exception as e:
+                logger.info(f"error during proclamation: {type(e)} {e}")
+        previous_leaders.sort()
+        if previous_leaders:
+            previous_leader = previous_leaders[-1]
+        else:
+            previous_leader = None
+        return ok, previous_leader
+    
+    def become_leader(self, previous_leader):
+        self.is_leader = True
+        self.leader_id = self.id
+        logger.info(f"*** I AM THE NEW LEADER *** previous leader was {previous_leader}")
+        
+        if previous_leader:
+            self.pull_stock(previous_leader)
+            
+                
+    def pull_stock(self, from_id : int):
+        if from_id != self.id and from_id is not None:
+            logger.info(f"{self.id} is retrieving stock from {from_id}")
+            try:
+                with grpc.insecure_channel(f'executor_{from_id}:50055') as channel:
+                    stub = executor_grpc.ExecutorServiceStub(channel)
+                    response = stub.GetStock(executor_pb2.StockRequest())
+                    items = response.all_items
+                    for name in items:
+                        ammount = stub.Read(executor_pb2.ReadRequest(key=name)).value
+                        self.data[name] = ammount
+            except Exception as e:
+                logger.exception(f"error on stock sync:") # This automatically captures the stack trace
 
     def run_worker(self):
         """Background thread to process queue (if leader) or check health (if follower)."""
         # Initial election on startup
         time.sleep(2) # Wait for network to establish
         self.start_election()
+        while self.leader_id is None or self.leader_id <= 0: # wait untill leader is declared
+            pass
+        self.pull_stock(self.leader_id) # retrieve stock on startup
         
         while True:
             time.sleep(5)
             if self.is_leader:
+                ok, previous_leader = self.proclaim_leadership()
+                if not ok:
+                    self.start_election()
+                    continue
                 while self.process_queue(): # process orders untill there are none
                     pass
             else:

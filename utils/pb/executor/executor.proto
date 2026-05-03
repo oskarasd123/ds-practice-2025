@@ -1,19 +1,21 @@
 syntax = "proto3";
 package executor;
 
+
 service ExecutorService {
     rpc Election (ElectionRequest) returns (ElectionResponse);
     rpc Coordinator (CoordinatorRequest) returns (CoordinatorResponse);
     rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
     rpc Write (WriteRequest) returns (WriteResponse);
     rpc Read (ReadRequest) returns (ReadResponse);
+    rpc GetStock (StockRequest) returns (StockResponse);
 }
 
 message ElectionRequest { int32 sender_id = 1; }
 message ElectionResponse { bool ok = 1; }
 
-message CoordinatorRequest { int32 leader_id = 1; }
-message CoordinatorResponse { bool ok = 1; }
+message CoordinatorRequest { int32 leader_id = 1; bool become_leader = 2;}
+message CoordinatorResponse { bool ok = 1; int32 previous_leader = 2;}
 
 message HeartbeatRequest { int32 leader_id = 1; }
 message HeartbeatResponse { bool is_alive = 1; }
@@ -31,4 +33,8 @@ message ReadRequest {
 }
 message ReadResponse {
     int32 value = 1;
+}
+message StockRequest {}
+message StockResponse{
+    repeated string all_items = 1;
 }
