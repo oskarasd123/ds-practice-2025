@@ -8,14 +8,14 @@ import logging
 
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 root_path = os.path.abspath(os.path.join(FILE, '../../..'))
-
+sys.path.append(root_path)
 sys.path.insert(0, os.path.join(root_path, 'utils/pb/executor'))
-import executor_pb2 as executor_pb2
-import executor_pb2_grpc as executor_grpc
+import utils.pb.executor.executor_pb2 as executor_pb2
+import utils.pb.executor.executor_pb2_grpc as executor_grpc
 
 sys.path.insert(0, os.path.join(root_path, 'utils/pb/order_queue'))
-import order_queue_pb2 as order_queue
-import order_queue_pb2_grpc as order_queue_grpc
+import utils.pb.order_queue.order_queue_pb2 as order_queue
+import utils.pb.order_queue.order_queue_pb2_grpc as order_queue_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] [Exec-%(name)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -26,6 +26,10 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
         self.queue_host = queue_host
         self.leader_id = None
         self.is_leader = False
+        self.data = { # default data
+            "To Kill a Mockingbird" : 2, # title : stock ammount
+            "Harry Potter and the Sorcerer's Stone" : 4,
+        }
         
         logger.name = str(self.id)
         logger.info(f"Initialized Executor {self.id}. Peers: {self.known_ids}")
@@ -49,6 +53,15 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
     def Heartbeat(self, request, context):
         """Simple health check response."""
         return executor_pb2.HeartbeatResponse(is_alive=True)
+    
+    def Read(self, request, context):
+        return executor_pb2.ReadResponse(self.data.get(request.key))
+    
+    def Write(self, request, context):
+        if request.key is not None and request.value is not None:
+            self.data[request.key] = request.value
+            return executor_pb2.WriteResponse(success=True)
+        return executor_pb2.WriteResponse(success=False)
 
     # --- Active Logic ---
     def start_election(self):
@@ -101,12 +114,16 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
         while True:
             time.sleep(5)
             if self.is_leader:
-                self.process_queue()
+                while self.process_queue(): # process orders untill there are none
+                    pass
             else:
                 self.check_leader_health()
 
     def process_queue(self):
-        """Dequeue and execute orders (Mutual Exclusion achieved by being the sole leader)."""
+        """
+        Dequeue and execute orders (Mutual Exclusion achieved by being the sole leader).
+        Returns wether an order was processed
+        """
         try:
             with grpc.insecure_channel(self.queue_host) as channel:
                 stub = order_queue_grpc.OrderQueueServiceStub(channel)
@@ -114,8 +131,19 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
                 if response.has_order:
                     logger.info(f">>> Executing Order: {response.order_id} <<<")
                     # Here you would actually do the stock updates, payment, etc.
+                    items : list[tuple[str, int]] = response.items
+                    for item in items:
+                        self.data[item.title] = self.data.get(item.title, 0) - item.ammount
+                    for node_id in self.known_ids:
+                        with grpc.insecure_channel(f'executor_{node_id}:50055') as channel:
+                            stub = executor_grpc.ExecutorServiceStub(channel)
+                            for item in items:
+                                stub.Write(executor_pb2.WriteRequest(key=item.title, value=self.data.get(item.title)))
+                    logger.info("completed order: {response.order_id}")
+                    return True
         except grpc.RpcError as e:
             logger.error(f"Failed to connect to queue: {e}")
+        return False
 
     def check_leader_health(self):
         if self.leader_id is None or self.leader_id == self.id:

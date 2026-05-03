@@ -24,6 +24,7 @@ from google.protobuf import empty_pb2
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 root_path = os.path.abspath(os.path.join(FILE, '../../..'))
+sys.path.append(root_path)
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 sys.path.insert(0, fraud_detection_grpc_path)
 import fraud_detection_pb2 as fraud_detection
@@ -46,8 +47,8 @@ import orchestrator_pb2_grpc as orchestrator_grpc
 
 
 sys.path.insert(0, os.path.join(root_path, 'utils/pb/order_queue'))
-import order_queue_pb2 as order_queue
-import order_queue_pb2_grpc as order_queue_grpc
+import utils.pb.order_queue.order_queue_pb2 as order_queue
+import utils.pb.order_queue.order_queue_pb2_grpc as order_queue_grpc
 
 sys.path.insert(0, os.path.join(root_path, 'utils/pb/orchestrator'))
 try:
@@ -343,10 +344,10 @@ app = Flask(__name__)
 CORS(app, resources={r'/*': {'origins': '*'}})
 
 
-def enqueue_order(order_id, is_express):
+def enqueue_order(order_id, is_express, items : list[tuple[str, int]]):
     """Sends approved order to the queue."""
     priority = 1 if is_express else 5 # Lower number = higher priority
-    executor_stub.Enqueue(order_queue.EnqueueRequest(order_id=str(order_id), priority=priority))
+    executor_stub.Enqueue(order_queue.EnqueueRequest(order_id=str(order_id), priority=priority, items=[order_queue.OrderItem(title=title, ammount=ammount) for title, ammount in items]))
 
 @app.route('/', methods=['GET'])
 def index():
@@ -371,7 +372,8 @@ def checkout():
 
     try:
         is_express = (data.get("shippingMethod") in ["Express", "Next-Day"])
-        enqueue_order(order_id, is_express)
+        items = [(item["name"], item["quantity"]) for item in data["items"]]
+        enqueue_order(order_id, is_express, items)
     except Exception as e:
         logger.error(f"Failed to enqueue order: {e}")
 
