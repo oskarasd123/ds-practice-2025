@@ -17,7 +17,15 @@ sys.path.insert(0, os.path.join(root_path, 'utils/pb/order_queue'))
 import utils.pb.order_queue.order_queue_pb2 as order_queue
 import utils.pb.order_queue.order_queue_pb2_grpc as order_queue_grpc
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] [Exec-%(name)s] %(message)s")
+
+executor_id = os.getenv("EXECUTOR_ID", "1")
+known_ids = os.getenv("KNOWN_IDS", "")
+queue_host = os.getenv("QUEUE_HOST", "order_queue:50054")
+
+logging.basicConfig(level=logging.INFO, 
+                    format="%(asctime)s [%(levelname)s] [Exec-%(name)s] %(message)s",
+                    filename=f"/logs/executor_{executor_id}_logs.txt",
+                    )
 logger = logging.getLogger(__name__)
 class ExecutorService(executor_grpc.ExecutorServiceServicer):
     def __init__(self, executor_id, known_ids, queue_host):
@@ -118,7 +126,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
                     if not response.ok:
                         ok = False
             except grpc.RpcError as e:
-                if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED or e.code() == grpc.StatusCode.UNAVAILABLE:
                     pass
                 else:
                     logger.error(f"gRPC error with node {node_id}: {e.code()} - {e.details()}")
@@ -159,7 +167,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
         # Initial election on startup
         time.sleep(2) # Wait for network to establish
         self.start_election()
-        while self.leader_id is None or self.leader_id <= 0: # wait untill leader is declared
+        while self.leader_id is None or self.leader_id == 0: # wait untill leader is declared
             pass
         self.pull_stock(self.leader_id) # retrieve stock on startup
         
@@ -215,9 +223,6 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
             self.start_election()
 
 def serve():
-    executor_id = os.getenv("EXECUTOR_ID", "1")
-    known_ids = os.getenv("KNOWN_IDS", "")
-    queue_host = os.getenv("QUEUE_HOST", "order_queue:50054")
 
     service = ExecutorService(executor_id, known_ids, queue_host)
     
