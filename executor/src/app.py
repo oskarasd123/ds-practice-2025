@@ -56,11 +56,13 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
         previous_leader = self.leader_id
         ok = False
         if self.id < request.leader_id:
-            ok = True
+            if self.leader_id == request.leader_id:
+                ok = True
             if request.become_leader:
-                self.leader_id = request.leader_id
+                ok = True
                 if self.leader_id != request.leader_id:
                     logger.info(f"Node {request.leader_id} is the new COORDINATOR.")
+                self.leader_id = request.leader_id
                 self.is_leader = False
         elif self.id == request.leader_id:
             pass
