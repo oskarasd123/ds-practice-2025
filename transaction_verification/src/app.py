@@ -94,7 +94,6 @@ class TransactionVerificationService(transaction_verification_grpc.transactionSe
 
     # ── Event (a): items not empty ──
     def checkItems(self, request, context):
-        print("CHECK ITEMS - A \n")
         # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
@@ -105,14 +104,12 @@ class TransactionVerificationService(transaction_verification_grpc.transactionSe
         logger.info(f"[{request.order_id}] (a) checkItems vc={clock_snap}")
 
         failed = len(items) == 0
-        print("EVENT A failed ", failed)
         callback(request.order_id, "a", clock_snap,
                  failed=failed, error_msg="Items list is empty" if failed else "")
         return empty_pb2.Empty()
 
     # ── Event (b): user data filled ──
     def checkUserData(self, request, context):
-        print("checkUserData - B \n")
         # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
@@ -124,14 +121,12 @@ class TransactionVerificationService(transaction_verification_grpc.transactionSe
         logger.info(f"[{request.order_id}] (b) checkUserData vc={clock_snap}")
 
         failed = not (user_name and user_contact)
-        print("EVENT b failed ", failed)
         callback(request.order_id, "b", list(clock_snap),
                  failed=failed, error_msg="Missing user fields" if failed else "")
         return empty_pb2.Empty()
 
     # ── Event (c): card format ──
     def checkCard(self, request, context):
-        print("checkCard - C\n")
         # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
@@ -143,7 +138,6 @@ class TransactionVerificationService(transaction_verification_grpc.transactionSe
         logger.info(f"[{request.order_id}] (c) checkCard vc={clock_snap}")
 
         failed = not (card_nr.isdigit() and len(card_nr) == 16)
-        print("EVENT C failed ", failed)
         callback(request.order_id, "c", list(clock_snap),
                  failed=failed, error_msg="Invalid card format" if failed else "")
         return empty_pb2.Empty()

@@ -82,7 +82,6 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionService):
 
     # ── Event (d): user fraud check ──
     def userCheck(self, request, context):
-        print("userCheck - D\n")
         # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
@@ -92,14 +91,12 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionService):
 
         logger.info(f"[{request.order_id}] (d) userCheck vc={clock_snap}")
 
-        print("EVENT D failed: false",)
         # Dummy: always passes
         callback(request.order_id, "d", clock_snap)
         return empty_pb2.Empty()
 
     # ── Event (e): card fraud check ──
     def cardCheck(self, request, context):
-        print("cardCheck - E\n")
         # time.sleep(1)
         with orders_lock:
             entry = orders.get(request.order_id)
@@ -111,7 +108,6 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionService):
         logger.info(f"[{request.order_id}] (e) cardCheck vc={clock_snap}")
 
         is_fraud = str(card_nr).startswith('999')
-        print("EVENT e failed ", is_fraud)
         callback(request.order_id, "e", clock_snap, failed=is_fraud, error_msg="Fraud detected" if is_fraud else "",)
 
         return empty_pb2.Empty()
