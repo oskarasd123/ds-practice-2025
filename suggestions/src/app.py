@@ -24,11 +24,24 @@ sys.path.insert(0, orchestrator_grpc_path)
 import orchestrator_pb2 as orchestrator
 import orchestrator_pb2_grpc as orchestrator_grpc
 
+# --- Setup paths for gRPC imports ---
+FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
+root_path = os.path.abspath(os.path.join(FILE, '../../..'))
+
+# Insert path exclusively for suggestions (other services are not used here)
+sys.path.insert(0, os.path.join(root_path, 'utils/pb/suggestions'))
+import suggestions_pb2 as suggestions
+import suggestions_pb2_grpc as suggestions_grpc
+
 logging.basicConfig(
     filename="/logs/suggestions_logs.txt",
     filemode="a",
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     level=logging.INFO,
+    # handlers=[
+    #     logging.FileHandler("/logs/suggestions_logs.txt"),
+    #     logging.StreamHandler()  # ← also print to docker logs
+    # ]
 )
 
 logger = logging.getLogger(__name__)

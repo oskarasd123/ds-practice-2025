@@ -9,6 +9,12 @@ service OrderQueueService {
 message EnqueueRequest {
     string order_id = 1;
     int32 priority = 2; // For the priority queue bonus!
+    repeated OrderItem items = 3;
+}
+
+message OrderItem {
+    string title = 1;
+    int32 ammount = 2;
 }
 
 message EnqueueResponse {
@@ -20,4 +26,5 @@ message DequeueRequest {}
 message DequeueResponse {
     string order_id = 1;
     bool has_order = 2;
+    repeated OrderItem items = 3;
 }

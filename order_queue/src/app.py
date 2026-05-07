@@ -26,18 +26,18 @@ class OrderQueueService(order_queue_grpc.OrderQueueServiceServicer):
     def Enqueue(self, request, context):
         with self.lock:
             # Tuple: (priority, order_id). Lower priority number = executed first.
-            self.queue.put((request.priority, request.order_id))
+            self.queue.put((request.priority, request.order_id, request.items))
             logger.info(f"Enqueued Order {request.order_id} with priority {request.priority}")
         return order_queue.EnqueueResponse(success=True)
 
     def Dequeue(self, request, context):
         with self.lock:
             if not self.queue.empty():
-                priority, order_id = self.queue.get()
+                priority, order_id, items = self.queue.get()
                 logger.info(f"Dequeued Order {order_id} (Priority: {priority})")
-                return order_queue.DequeueResponse(order_id=order_id, has_order=True)
+                return order_queue.DequeueResponse(order_id=order_id, has_order=True, items=items)
             else:
-                return order_queue.DequeueResponse(order_id="", has_order=False)
+                return order_queue.DequeueResponse(order_id="", has_order=False, items=None)
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
