@@ -2,8 +2,12 @@ The store database lives in the executors.
 
 Each executor has it's database which is synced to the leader's.
 
+Consistency:
 Because we have a leader there is no need to implement complex consistency models.
 Consistency is a problem only when one executor goes down.
 DONE:
-If a follower goes down then ask for stock from leader.
+If a follower goes down and back up then ask for stock from leader.
 If the leader goes down and back up then ask for stock from previous leader.
+
+Commitments:
+each executor keeps track of commited deliveries. There is no need to ask followers to agree because the leader is the source of truth.

@@ -1,7 +1,7 @@
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -80,3 +80,31 @@ class StockResponse(_message.Message):
     ALL_ITEMS_FIELD_NUMBER: _ClassVar[int]
     all_items: _containers.RepeatedScalarFieldContainer[str]
     def __init__(self, all_items: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class Item(_message.Message):
+    __slots__ = ("title", "ammount")
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    AMMOUNT_FIELD_NUMBER: _ClassVar[int]
+    title: str
+    ammount: int
+    def __init__(self, title: _Optional[str] = ..., ammount: _Optional[int] = ...) -> None: ...
+
+class PutCommittRequest(_message.Message):
+    __slots__ = ("order_id", "overwrite", "delivery_time_millis", "items")
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    OVERWRITE_FIELD_NUMBER: _ClassVar[int]
+    DELIVERY_TIME_MILLIS_FIELD_NUMBER: _ClassVar[int]
+    ITEMS_FIELD_NUMBER: _ClassVar[int]
+    order_id: int
+    overwrite: bool
+    delivery_time_millis: int
+    items: _containers.RepeatedCompositeFieldContainer[Item]
+    def __init__(self, order_id: _Optional[int] = ..., overwrite: bool = ..., delivery_time_millis: _Optional[int] = ..., items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
+
+class PutCommittResponse(_message.Message):
+    __slots__ = ("ok", "exists")
+    OK_FIELD_NUMBER: _ClassVar[int]
+    EXISTS_FIELD_NUMBER: _ClassVar[int]
+    ok: bool
+    exists: bool
+    def __init__(self, ok: bool = ..., exists: bool = ...) -> None: ...

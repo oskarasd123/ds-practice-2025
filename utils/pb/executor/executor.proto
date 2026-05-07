@@ -9,6 +9,7 @@ service ExecutorService {
     rpc Write (WriteRequest) returns (WriteResponse);
     rpc Read (ReadRequest) returns (ReadResponse);
     rpc GetStock (StockRequest) returns (StockResponse);
+    rpc PutCommit (PutCommittRequest) returns (PutCommittResponse);
 }
 
 message ElectionRequest { int32 sender_id = 1; }
@@ -37,4 +38,22 @@ message ReadResponse {
 message StockRequest {}
 message StockResponse{
     repeated string all_items = 1;
+}
+
+message OrderItem {
+    string title = 1;
+    int32 ammount = 2;
+}
+
+
+message PutCommittRequest {
+    int32 order_id = 1;
+    bool overwrite = 2;
+    int32 delivery_time_millis = 3;
+    repeated Item OrderItem = 4;
+}
+
+message PutCommittResponse {
+    bool ok = 1;
+    bool exists = 2;
 }

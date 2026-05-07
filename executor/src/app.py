@@ -38,6 +38,12 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
             "To Kill a Mockingbird" : 2, # title : stock ammount
             "Harry Potter and the Sorcerer's Stone" : 4,
         }
+        self.commits : dict[int, tuple[int, list[tuple[str, int]]]] = dict() # commited transactions
+        # commit structure:
+        # {order_id : (delivery_time_millis, [(title, ammount)])}
+        # delivery_timestamp : time when order has been delivered
+        # commits are removed from list when they are delivered/finalzed
+        # using dict instead of a list to make lookup and search faster
         
         logger.name = str(self.id)
         logger.info(f"Initialized Executor {self.id}. Peers: {self.known_ids}")
@@ -85,6 +91,19 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
     
     def GetStock(self, request, context):
         return executor_pb2.StockResponse(all_items=self.data.keys())
+    
+    def PutCommit(self, request, context):
+        order_id = request.order_id
+        overwrite = request.overwrite
+        delivery_time = request.delivery_time_millis
+        items = request.items
+        exists = order_id in self.commits
+        if exists and not overwrite:
+            return executor_pb2.PutCommittResponse(ok=False, exists=True)
+        
+        self.commits[order_id] = delivery_time, [(item.title, item.ammount) for item in items]
+        return executor_pb2.PutCommittResponse(ok=True, exists=exists)
+        
 
     # --- Active Logic ---
     def start_election(self):
@@ -180,8 +199,14 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
                 if not ok:
                     self.start_election()
                     continue
-                while self.process_queue(): # process orders untill there are none
-                    pass
+                for i in range(100): 
+                    if not self.process_queue():
+                        break
+                for k in self.commits.keys():
+                    dellivery_time, items = self.commits[k]
+                    if time.time() > dellivery_time:
+                        delivered_order = self.commits.pop(k)
+                        logger.info(f"order {delivered_order} has been delivered")
             else:
                 self.check_leader_health()
 
@@ -198,6 +223,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
                     logger.info(f">>> Executing Order: {response.order_id} <<<")
                     # Here you would actually do the stock updates, payment, etc.
                     items : list[tuple[str, int]] = response.items
+                    self.commits[int(response.order_id)] = int((time.time()+60)*1000), [(item.title, item.ammount) for item in items] # orders are dellivered in 60 seconds
                     for item in items:
                         self.data[item.title] = self.data.get(item.title, 0) - item.ammount
                     for node_id in self.known_ids:

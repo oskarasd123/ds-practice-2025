@@ -64,6 +64,11 @@ class ExecutorServiceStub(object):
                 request_serializer=executor__pb2.StockRequest.SerializeToString,
                 response_deserializer=executor__pb2.StockResponse.FromString,
                 _registered_method=True)
+        self.PutCommit = channel.unary_unary(
+                '/executor.ExecutorService/PutCommit',
+                request_serializer=executor__pb2.PutCommittRequest.SerializeToString,
+                response_deserializer=executor__pb2.PutCommittResponse.FromString,
+                _registered_method=True)
 
 
 class ExecutorServiceServicer(object):
@@ -105,6 +110,12 @@ class ExecutorServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def PutCommit(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ExecutorServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -137,6 +148,11 @@ def add_ExecutorServiceServicer_to_server(servicer, server):
                     servicer.GetStock,
                     request_deserializer=executor__pb2.StockRequest.FromString,
                     response_serializer=executor__pb2.StockResponse.SerializeToString,
+            ),
+            'PutCommit': grpc.unary_unary_rpc_method_handler(
+                    servicer.PutCommit,
+                    request_deserializer=executor__pb2.PutCommittRequest.FromString,
+                    response_serializer=executor__pb2.PutCommittResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -301,6 +317,33 @@ class ExecutorService(object):
             '/executor.ExecutorService/GetStock',
             executor__pb2.StockRequest.SerializeToString,
             executor__pb2.StockResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PutCommit(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/executor.ExecutorService/PutCommit',
+            executor__pb2.PutCommittRequest.SerializeToString,
+            executor__pb2.PutCommittResponse.FromString,
             options,
             channel_credentials,
             insecure,

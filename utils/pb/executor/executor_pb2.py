@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x65xecutor.proto\x12\x08\x65xecutor\"$\n\x0f\x45lectionRequest\x12\x11\n\tsender_id\x18\x01 \x01(\x05\"\x1e\n\x10\x45lectionResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\">\n\x12\x43oordinatorRequest\x12\x11\n\tleader_id\x18\x01 \x01(\x05\x12\x15\n\rbecome_leader\x18\x02 \x01(\x08\":\n\x13\x43oordinatorResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x17\n\x0fprevious_leader\x18\x02 \x01(\x05\"%\n\x10HeartbeatRequest\x12\x11\n\tleader_id\x18\x01 \x01(\x05\"%\n\x11HeartbeatResponse\x12\x10\n\x08is_alive\x18\x01 \x01(\x08\"*\n\x0cWriteRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x05\" \n\rWriteResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x1a\n\x0bReadRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1d\n\x0cReadResponse\x12\r\n\x05value\x18\x01 \x01(\x05\"\x0e\n\x0cStockRequest\"\"\n\rStockResponse\x12\x11\n\tall_items\x18\x01 \x03(\t2\x94\x03\n\x0f\x45xecutorService\x12\x41\n\x08\x45lection\x12\x19.executor.ElectionRequest\x1a\x1a.executor.ElectionResponse\x12J\n\x0b\x43oordinator\x12\x1c.executor.CoordinatorRequest\x1a\x1d.executor.CoordinatorResponse\x12\x44\n\tHeartbeat\x12\x1a.executor.HeartbeatRequest\x1a\x1b.executor.HeartbeatResponse\x12\x38\n\x05Write\x12\x16.executor.WriteRequest\x1a\x17.executor.WriteResponse\x12\x35\n\x04Read\x12\x15.executor.ReadRequest\x1a\x16.executor.ReadResponse\x12;\n\x08GetStock\x12\x16.executor.StockRequest\x1a\x17.executor.StockResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x65xecutor.proto\x12\x08\x65xecutor\"$\n\x0f\x45lectionRequest\x12\x11\n\tsender_id\x18\x01 \x01(\x05\"\x1e\n\x10\x45lectionResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\">\n\x12\x43oordinatorRequest\x12\x11\n\tleader_id\x18\x01 \x01(\x05\x12\x15\n\rbecome_leader\x18\x02 \x01(\x08\":\n\x13\x43oordinatorResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x17\n\x0fprevious_leader\x18\x02 \x01(\x05\"%\n\x10HeartbeatRequest\x12\x11\n\tleader_id\x18\x01 \x01(\x05\"%\n\x11HeartbeatResponse\x12\x10\n\x08is_alive\x18\x01 \x01(\x08\"*\n\x0cWriteRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x05\" \n\rWriteResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x1a\n\x0bReadRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1d\n\x0cReadResponse\x12\r\n\x05value\x18\x01 \x01(\x05\"\x0e\n\x0cStockRequest\"\"\n\rStockResponse\x12\x11\n\tall_items\x18\x01 \x03(\t\"&\n\x04Item\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0f\n\x07\x61mmount\x18\x02 \x01(\x05\"u\n\x11PutCommittRequest\x12\x10\n\x08order_id\x18\x01 \x01(\x05\x12\x11\n\toverwrite\x18\x02 \x01(\x08\x12\x1c\n\x14\x64\x65livery_time_millis\x18\x03 \x01(\x05\x12\x1d\n\x05items\x18\x04 \x03(\x0b\x32\x0e.executor.Item\"0\n\x12PutCommittResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x0e\n\x06\x65xists\x18\x02 \x01(\x08\x32\xdc\x03\n\x0f\x45xecutorService\x12\x41\n\x08\x45lection\x12\x19.executor.ElectionRequest\x1a\x1a.executor.ElectionResponse\x12J\n\x0b\x43oordinator\x12\x1c.executor.CoordinatorRequest\x1a\x1d.executor.CoordinatorResponse\x12\x44\n\tHeartbeat\x12\x1a.executor.HeartbeatRequest\x1a\x1b.executor.HeartbeatResponse\x12\x38\n\x05Write\x12\x16.executor.WriteRequest\x1a\x17.executor.WriteResponse\x12\x35\n\x04Read\x12\x15.executor.ReadRequest\x1a\x16.executor.ReadResponse\x12;\n\x08GetStock\x12\x16.executor.StockRequest\x1a\x17.executor.StockResponse\x12\x46\n\tPutCommit\x12\x1b.executor.PutCommittRequest\x1a\x1c.executor.PutCommittResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -55,6 +55,12 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_STOCKREQUEST']._serialized_end=451
   _globals['_STOCKRESPONSE']._serialized_start=453
   _globals['_STOCKRESPONSE']._serialized_end=487
-  _globals['_EXECUTORSERVICE']._serialized_start=490
-  _globals['_EXECUTORSERVICE']._serialized_end=894
+  _globals['_ITEM']._serialized_start=489
+  _globals['_ITEM']._serialized_end=527
+  _globals['_PUTCOMMITTREQUEST']._serialized_start=529
+  _globals['_PUTCOMMITTREQUEST']._serialized_end=646
+  _globals['_PUTCOMMITTRESPONSE']._serialized_start=648
+  _globals['_PUTCOMMITTRESPONSE']._serialized_end=696
+  _globals['_EXECUTORSERVICE']._serialized_start=699
+  _globals['_EXECUTORSERVICE']._serialized_end=1175
 # @@protoc_insertion_point(module_scope)
