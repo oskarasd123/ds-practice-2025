@@ -145,3 +145,16 @@ services:
       - ./logs:/logs
     depends_on:
       - order_queue
+  payment:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    ports:
+      - "50055:50055"
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/payment/src/app.py
+    volumes:
+      - ./utils:/app/utils
+      - ./payment/src:/app/payment/src
+      - ./logs:/logs
