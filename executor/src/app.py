@@ -37,6 +37,9 @@ EXECUTOR_PORT = os.getenv("EXECUTOR_PORT")
 if EXECUTOR_PORT is None:
     raise RuntimeError("EXECUTOR_PORT environment variable is required!")
 
+PAYMENT_PORT = os.getenv("PAYMENT_PORT")
+if PAYMENT_PORT is None:
+    raise RuntimeError("PAYMENT_PORT environment variable is required!")
 
 class ExecutorService(executor_grpc.ExecutorServiceServicer):
     def __init__(self, executor_id, known_ids, queue_host):
@@ -132,7 +135,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
         #logger.info(f"{self.id} proclaiming leadership with become leader: {become_leader}")
         for node_id in self.known_ids:
             try:
-                with grpc.insecure_channel(f'executor_{node_id}:50055') as channel:
+                with grpc.insecure_channel(f'executor_{node_id}:{EXECUTOR_PORT}') as channel:
                     stub = executor_grpc.ExecutorServiceStub(channel)
                     response = stub.Coordinator(executor_pb2.CoordinatorRequest(leader_id=self.id, become_leader=become_leader), timeout=1)
                     if response.previous_leader != 0: # None becomes 0 through grpc call
@@ -162,9 +165,9 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
             self.pull_stock(previous_leader)
 
 
-    def pull_stock(self, from_id : int):
-        if from_id != self.id and from_id is not None:
-            logger.info(f"{self.id} is retrieving stock from {from_id}")
+    def pull_stock(self, node_id : int):
+        if node_id != self.id and node_id is not None:
+            logger.info(f"{self.id} is retrieving stock from {node_id}")
             try:
                 with grpc.insecure_channel(f'executor_{node_id}:{EXECUTOR_PORT}') as channel:
                     stub = executor_grpc.ExecutorServiceStub(channel)
@@ -233,7 +236,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
 
                     # 2. Prepare Payment Service
                     try:
-                        with grpc.insecure_channel('payment:50055') as pay_chan:
+                        with grpc.insecure_channel(f'payment:{PAYMENT_PORT}') as pay_chan:
                             pay_stub = payment_grpc.PaymentServiceStub(pay_chan)
                             pay_resp = pay_stub.Prepare(payment.PrepareRequest(order_id=str(order_id)))
                             logger.info(f"[2PC-Phase 1] Payment Prepare: Voted {'YES' if pay_resp.ready else 'NO'}")
@@ -260,7 +263,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
                             if node_id == self.id:
                                 continue
                             try:
-                                with grpc.insecure_channel(f'executor_{node_id}:50055') as channel:
+                                with grpc.insecure_channel(f'executor_{node_id}:{EXECUTOR_PORT}') as channel:
                                     rep_stub = executor_grpc.ExecutorServiceStub(channel)
                                     for item in items:
                                         rep_stub.Write(executor_pb2.WriteRequest(key=item.title, value=self.data.get(item.title)))
@@ -269,7 +272,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
 
                         # Commit Payment
                         try:
-                            with grpc.insecure_channel('payment:50055') as pay_chan:
+                            with grpc.insecure_channel(f'payment:{PAYMENT_PORT}') as pay_chan:
                                 pay_stub = payment_grpc.PaymentServiceStub(pay_chan)
                                 pay_stub.Commit(payment.CommitRequest(order_id=str(order_id)))
                         except Exception as e:
@@ -282,7 +285,7 @@ class ExecutorService(executor_grpc.ExecutorServiceServicer):
 
                         # Abort Payment (DB doesn't need abort logic since we didn't deduct anything yet)
                         try:
-                            with grpc.insecure_channel('payment:50055') as pay_chan:
+                            with grpc.insecure_channel(f'payment:{PAYMENT_PORT}') as pay_chan:
                                 pay_stub = payment_grpc.PaymentServiceStub(pay_chan)
                                 pay_stub.Abort(payment.AbortRequest(order_id=str(order_id)))
                         except Exception as e:

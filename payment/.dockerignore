@@ -1,0 +1,69 @@
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Logs
+*.log
+logs/
+*.out
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+*.eggs/
+
+# Docker files
+Dockerfile*
+docker-compose.override.yml
+
+# Git
+.git/
+.gitignore
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Node.js (if present)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Coverage reports
+.coverage
+htmlcov/
+*.cover
+*.gcov
+*.lcov
+
+# Pytest cache
+.pytest_cache/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.BAK
+*.old
+

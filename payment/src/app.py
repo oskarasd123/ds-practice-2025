@@ -1,6 +1,7 @@
 import sys
 import os
 import grpc
+import logging
 from concurrent import futures
 
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
@@ -14,6 +15,14 @@ PAYMENT_PORT = os.getenv("PAYMENT_PORT")
 if PAYMENT_PORT is None:
     raise RuntimeError("PAYMENT_PORT environment variable is required!")
 
+logging.basicConfig(
+    filename="/logs/payment_logs.txt",
+    filemode="a",
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+    level=logging.INFO,
+)
+
+logger = logging.getLogger(__name__)
 
 class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
     def __init__(self):
@@ -25,13 +34,13 @@ class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
 
     def Commit(self, request, context):
         if self.prepared:
-            print(f"Payment committed for order {request.order_id}")
+            logger.info(f"Payment committed for order {request.order_id}")
             self.prepared = False
         return payment_pb2.CommitResponse(success=True)
 
     def Abort(self, request, context):
         self.prepared = False
-        print(f"Payment aborted for order {request.order_id}")
+        logger.info(f"Payment aborted for order {request.order_id}")
         return payment_pb2.AbortResponse(aborted=True)
 
 def serve():
