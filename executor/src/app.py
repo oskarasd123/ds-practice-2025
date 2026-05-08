@@ -21,8 +21,17 @@ sys.path.insert(0, os.path.join(root_path, 'utils/pb/payment'))
 import payment_pb2 as payment
 import payment_pb2_grpc as payment_grpc
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] [Exec-%(name)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [Exec-%(name)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
+
+EXECUTOR_PORT = os.getenv("EXECUTOR_PORT")
+if EXECUTOR_PORT is None:
+    raise RuntimeError("EXECUTOR_PORT environment variable is required!")
+
+
 class ExecutorService(executor_grpc.ExecutorServiceServicer):
     def __init__(self, executor_id, known_ids, queue_host):
         self.id = int(executor_id)
@@ -300,7 +309,7 @@ def serve():
     
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     executor_grpc.add_ExecutorServiceServicer_to_server(service, server)
-    server.add_insecure_port("[::]:50055") 
+    server.add_insecure_port(f"[::]:{EXECUTOR_PORT}")
     server.start()
     
     threading.Thread(target=service.run_worker, daemon=True).start()

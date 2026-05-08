@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ENV TZ=Europe/Tallinn
+
 WORKDIR /app
 
 COPY ./payment/requirements.txt ./

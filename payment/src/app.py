@@ -10,6 +10,11 @@ sys.path.insert(0, os.path.join(root_path, 'utils/pb/payment'))
 import payment_pb2
 import payment_pb2_grpc
 
+PAYMENT_PORT = os.getenv("PAYMENT_PORT")
+if PAYMENT_PORT is None:
+    raise RuntimeError("PAYMENT_PORT environment variable is required!")
+
+
 class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
     def __init__(self):
         self.prepared = False
@@ -32,7 +37,7 @@ class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     payment_pb2_grpc.add_PaymentServiceServicer_to_server(PaymentService(), server)
-    server.add_insecure_port('[::]:50055')
+    server.add_insecure_port(f"[::]:{PAYMENT_PORT}")
     server.start()
     server.wait_for_termination()
 
