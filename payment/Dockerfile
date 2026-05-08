@@ -4,7 +4,7 @@ ENV TZ=Europe/Tallinn
 
 WORKDIR /app
 
-COPY ./executor/requirements.txt ./
+COPY ./payment/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD sh -c "python ${PYTHONFILE}"
+CMD ["sh", "-c", "python ${PYTHONFILE}"]
